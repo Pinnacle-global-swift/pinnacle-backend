@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   accountType: {
     type: String,
     required: [true, 'Please select account type'],
-    enum: ['personal', 'business']
+    enum: ['personal', 'business', "corporate"]
   },
   fullName: {
     type: String,
