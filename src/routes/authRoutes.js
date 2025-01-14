@@ -65,7 +65,7 @@ const otpValidation = [
  */
 const registerValidation = [
     body('accountType')
-        .isIn(['personal', 'business'])
+        .isIn(['personal', 'business', 'corporate'])
         .withMessage('Invalid account type'),
     body('fullName').trim().notEmpty().withMessage('Full name is required'),
     body('gender')
