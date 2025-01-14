@@ -90,7 +90,7 @@ export const EmailTemplates = {
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgb.png?alt=media&token=1a9dcde5-62a3-4eaf-9c96-9cd3d56f2b64text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
                         </td>
                     </tr>
                     <!-- Content -->
@@ -181,7 +181,7 @@ export const EmailTemplates = {
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgb.png?alt=media&token=1a9dcde5-62a3-4eaf-9c96-9cd3d56f2b64text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
                         </td>
                     </tr>
                     <!-- Content -->
@@ -262,7 +262,7 @@ export const EmailTemplates = {
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgb.png?alt=media&token=1a9dcde5-62a3-4eaf-9c96-9cd3d56f2b64text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
                         </td>
                     </tr>
                     <!-- Content -->
