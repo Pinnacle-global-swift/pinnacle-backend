@@ -1,6 +1,6 @@
 export const EmailTemplates = {
 
-    otpVerification: (name, otp, uniqueId, accountType) => ({
+    otpVerification: (name, accountType, uniqueId, otp) => ({
         subject: 'PINNACLE GLOBAL SWIFT - Email Verification OTP',
         html: `
          <!DOCTYPE html>

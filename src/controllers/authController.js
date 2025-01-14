@@ -64,7 +64,7 @@ export const authController = {
 
       // otpExpiry
 
-
+      console.log(user, "voke s")
 
       // Create account for user
       await Account.create({
@@ -76,7 +76,7 @@ export const authController = {
       // Send OTP email
       await emailService.sendEmail(
         email,
-        authEmailTemplates.otpVerification(fullName, otp)
+        authEmailTemplates.otpVerification(fullName, user.accountType, user.uniqueId, otp)
       );
 
       res.status(201).json({
@@ -239,7 +239,7 @@ export const authController = {
         });
       }
 
-  
+
 
       if (!isOTPValid(user.otp, otp, user.otpExpiry)) {
         return res.status(400).json({
@@ -300,29 +300,29 @@ export const authController = {
     try {
       const { email } = req.body;
       const user = await User.findOne({ email });
-  
+
       if (!user) {
         return res.status(404).json({
           success: false,
           error: 'No account found with this email'
         });
       }
-  
+
       // Generate OTP
       const otp = generateOTP();
       const otpExpiry = Date.now() + (15 * 60 * 1000); // 15 minutes
-  
+
       // Save OTP to user
       user.resetPasswordOTP = otp;
       user.resetPasswordOTPExpiry = otpExpiry;
       await user.save();
-  
+
       // Send reset password email
       await emailService.sendEmail(
         email,
         authEmailTemplates.forgotPassword(user.fullName, otp, user.uniqueId)
       );
-  
+
       res.status(200).json({
         success: true,
         message: 'Password reset OTP has been sent to your email'
@@ -331,29 +331,29 @@ export const authController = {
       next(error);
     }
   },
-  
+
   verifyResetOTP: async (req, res, next) => {
     try {
       const { email, otp } = req.body;
       const user = await User.findOne({ email });
-  
+
       if (!user) {
         return res.status(404).json({
           success: false,
           error: 'No account found with this email'
         });
       }
-  
+
       if (!isOTPValid(user.resetPasswordOTP, otp, user.resetPasswordOTPExpiry)) {
         return res.status(400).json({
           success: false,
           error: 'Invalid or expired OTP'
         });
       }
-  
+
       // Generate reset token
       const resetToken = generateToken(user._id);
-  
+
       res.status(200).json({
         success: true,
         resetToken
@@ -362,31 +362,31 @@ export const authController = {
       next(error);
     }
   },
-  
+
   resetPassword: async (req, res, next) => {
     try {
       const { password } = req.body;
       const user = await User.findById(req.user.id);
-  
+
       if (!user) {
         return res.status(404).json({
           success: false,
           error: 'User not found'
         });
       }
-  
+
       // Update password
       user.password = password;
       user.resetPasswordOTP = undefined;
       user.resetPasswordOTPExpiry = undefined;
       await user.save();
-  
+
       // Send password changed confirmation email
       await emailService.sendEmail(
         user.email,
         authEmailTemplates.passwordChanged(user.fullName, user.uniqueId)
       );
-  
+
       res.status(200).json({
         success: true,
         message: 'Password has been reset successfully'
@@ -400,7 +400,7 @@ export const authController = {
   logout: async (req, res, next) => {
     try {
       const token = req.token;
-      
+
       try {
         const decoded = jwt.decode(token);
         const expiresAt = new Date(decoded.exp * 1000); // Convert exp to milliseconds
