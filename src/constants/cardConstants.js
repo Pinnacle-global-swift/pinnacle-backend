@@ -7,6 +7,7 @@ export const CARD_REQUIREMENTS = {
     MASTERCARD: 'mastercard'
   };
   
+  
   export const CARD_LIMITS = {
     [CARD_TYPES.MASTERCARD]: {
       limit: 10000,
