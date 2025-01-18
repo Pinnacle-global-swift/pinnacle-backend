@@ -12,6 +12,7 @@ class TransferValidator {
     return { senderAccount, recipientAccount };
   }
 
+  
   async validateAccountNumber(accountNumber) {
     if (!isValidAccountNumber(accountNumber)) {
       throw new ValidationError('Invalid account number format');

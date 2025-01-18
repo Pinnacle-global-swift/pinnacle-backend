@@ -5,8 +5,9 @@ import { logger } from '../logger.js';
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
-        service: 'gmail', 
-      secure: true,
+      host: "mail.privateemail.com", // Use your email host
+      port: 465, // Port for secure SMTP
+      secure: true, 
       auth: {
         user: config.emailUser,
         pass: config.emailPassword

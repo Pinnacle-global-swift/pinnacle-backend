@@ -4,3 +4,4 @@ export const validatePIN = (pin) => {
     return /^\d{6}$/.test(pin);
   };
   
+  
