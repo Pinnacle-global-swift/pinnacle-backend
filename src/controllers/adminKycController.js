@@ -77,9 +77,99 @@ export const adminKycController = {
       await emailService.sendEmail(user.email, {
         subject: `PINNACLE GLOBAL SWIFT - KYC Verification ${status === KYC_STATUS.APPROVED ? 'Approved' : 'Rejected'}`,
         html: `
-          <p>Dear ${user.fullName},</p>
-          <p>Your KYC verification has been ${status === KYC_STATUS.APPROVED ? 'approved' : 'rejected'}.</p>
-          ${remarks ? `<p>Remarks: ${remarks}</p>` : ''}
+         <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PINNACLE GLOBAL SWIFT - KYC Verification Status</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f4;">
+        <tr>
+            <td style="padding: 20px 0;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">KYC Verification Status</h1>
+                            <p style="margin: 0 0 20px; font-size: 16px;">Dear ${user.fullName},</p>
+                            
+                            <!-- Status Message -->
+                            <div style="background-color: ${status === KYC_STATUS.APPROVED ? '#e8f5e9' : '#ffebee'}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                    <tr>
+                                        <td>
+                                            <p style="margin: 0; font-size: 18px; color: ${status === KYC_STATUS.APPROVED ? '#2e7d32' : '#c62828'};">
+                                                Your KYC verification has been <strong>${status === KYC_STATUS.APPROVED ? 'approved' : 'rejected'}</strong>
+                                            </p>
+                                            ${remarks ? `
+                                            <p style="margin: 10px 0 0; color: #666666;">
+                                                <strong>Remarks:</strong> ${remarks}
+                                            </p>
+                                            ` : ''}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Next Steps -->
+                            ${status === KYC_STATUS.APPROVED ? `
+                            <div style="margin: 20px 0;">
+                                <p style="margin: 0 0 10px;"><strong>Next Steps:</strong></p>
+                                <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
+                                    <li style="margin-bottom: 10px;">You now have full access to all account features</li>
+                                    <li style="margin-bottom: 10px;">You can proceed with transactions and transfers</li>
+                                    <li>Explore our complete range of banking services</li>
+                                </ul>
+                            </div>
+                            ` : `
+                            <div style="margin: 20px 0;">
+                                <p style="margin: 0 0 10px;"><strong>What you can do:</strong></p>
+                                <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
+                                    <li style="margin-bottom: 10px;">Review the rejection remarks above</li>
+                                    <li style="margin-bottom: 10px;">Update your documents and resubmit</li>
+                                    <li>Contact our support team for assistance</li>
+                                </ul>
+                            </div>
+                            `}
+
+                            <!-- Action Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="background-color: #2A69ED; border-radius: 4px; text-align: center;">
+                                        <a href="#" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;">View Account Details</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0; font-style: italic; color: #666666;">If you have any questions, please don't hesitate to contact our support team.</p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f8f8; padding: 20px 40px; text-align: center; font-size: 14px; color: #666666;">
+                            <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} PINNACLE GLOBAL SWIFT. All rights reserved.</p>
+                            <p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
+                            <p style="margin: 10px 0 0;">
+                                <a href="#" style="color: #2A69ED; text-decoration: none;">Privacy Policy</a> | 
+                                <a href="#" style="color: #2A69ED; text-decoration: none;">Terms of Service</a> | 
+                                <a href="#" style="color: #2A69ED; text-decoration: none;">Contact Support</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
         `
       });
 
