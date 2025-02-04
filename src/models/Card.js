@@ -1,5 +1,4 @@
-
-  import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const cardSchema = new mongoose.Schema({
   userId: {
@@ -25,11 +24,11 @@ const cardSchema = new mongoose.Schema({
   cvv: {
     type: String,
     required: true,
-    select: false // CVV is not returned in queries by default
+    select: false
   },
   pinHash: {
     type: String,
-    select: false // PIN hash is not returned in queries by default
+    select: false
   },
   expiryMonth: {
     type: String,
@@ -41,7 +40,7 @@ const cardSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'active', 'blocked', 'expired'],
+    enum: ['pending', 'processing', 'active', 'blocked', 'expired', 'rejected'],
     default: 'pending'
   },
   paymentStatus: {
@@ -56,6 +55,7 @@ const cardSchema = new mongoose.Schema({
   paymentMethod: String,
   transactionId: String,
   paymentDate: Date,
+  remarks: String,
   limit: {
     type: Number,
     required: true

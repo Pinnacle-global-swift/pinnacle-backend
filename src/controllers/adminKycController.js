@@ -14,29 +14,80 @@ export const adminKycController = {
         },
         {
           $lookup: {
-            from: 'users',
+            from: 'pinnacleusers',
             localField: 'userId',
             foreignField: '_id',
             as: 'user'
           }
         },
         {
+          $unwind: '$user'
+        },
+        {
           $project: {
+            applicantName: '$fullName',
             'user.fullName': 1,
+            'user.email': 1,
+            'user.phoneNumber': 1,
             documentType: '$idType',
             documentNumber: '$idNumber',
+            dateOfBirth: 1,
+            documents: 1,
             status: 1,
-            submittedAt: '$createdAt'
+            submittedAt: '$createdAt',
+            additionalInfo: 1,
+            remarks: 1
           }
+        },
+        {
+          $sort: { submittedAt: -1 }
         }
       ]);
 
+      const stats = {
+        totalPending: kycApplications.length,
+        withPassport: kycApplications.filter(app => app.documentType === 'passport').length,
+        withNationalId: kycApplications.filter(app => app.documentType === 'national_id').length,
+        withDriversLicense: kycApplications.filter(app => app.documentType === 'drivers_license').length,
+        documentsSubmitted: kycApplications.filter(app => 
+          app.documents?.idFront && 
+          app.documents?.idBack && 
+          app.documents?.selfie && 
+          app.documents?.proofOfAddress
+        ).length
+      };
 
-      console.log(kycApplications)
+      const formattedApplications = kycApplications.map(app => ({
+        _id: app._id,
+        applicantDetails: {
+          name: app.applicantName,
+          email: app.user.email,
+          phoneNumber: app.user.phoneNumber,
+          dateOfBirth: app.dateOfBirth
+        },
+        documentInfo: {
+          type: app.documentType,
+          number: app.documentNumber,
+          documents: {
+            idFront: app.documents?.idFront ? true : false,
+            idBack: app.documents?.idBack ? true : false,
+            selfie: app.documents?.selfie ? true : false,
+            proofOfAddress: app.documents?.proofOfAddress ? true : false
+          }
+        },
+        status: app.status,
+        submittedAt: app.submittedAt,
+        remarks: app.remarks || null,
+        additionalInfo: app.additionalInfo || null
+      }));
 
       res.status(200).json({
         success: true,
-        data: kycApplications
+        data: {
+          applications: formattedApplications,
+          statistics: stats,
+          totalCount: kycApplications.length
+        }
       });
     } catch (error) {
       next(error);
@@ -44,10 +95,11 @@ export const adminKycController = {
   },
 
 
-
   async approveKyc(req, res, next) {
     try {
       const { kycId, status, remarks } = req.body;
+
+      console.log(kycId, status, remarks)
 
       const kyc = await KYC.findById(kycId);
       if (!kyc) {
@@ -55,7 +107,10 @@ export const adminKycController = {
           success: false,
           error: 'KYC application not found'
         });
+
       }
+
+      console.log("fullkyc", kyc)
 
       if (kyc.status !== KYC_STATUS.PROCESSING) {
         return res.status(400).json({
@@ -70,8 +125,10 @@ export const adminKycController = {
       kyc.remarks = remarks;
       await kyc.save();
 
+
       // Get user details for email notification
       const user = await User.findById(kyc.userId);
+      console.log(user, "ss", kyc.userId)
 
       // Send email notification
       await emailService.sendEmail(user.email, {
@@ -99,7 +156,7 @@ export const adminKycController = {
                     <tr>
                         <td style="padding: 40px;">
                             <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">KYC Verification Status</h1>
-                            <p style="margin: 0 0 20px; font-size: 16px;">Dear ${user.fullName},</p>
+                            <p style="margin: 0 0 20px; font-size: 16px;">Dear ${user?.fullLegalName},</p>
                             
                             <!-- Status Message -->
                             <div style="background-color: ${status === KYC_STATUS.APPROVED ? '#e8f5e9' : '#ffebee'}; border-radius: 8px; padding: 20px; margin: 20px 0;">

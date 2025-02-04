@@ -2,19 +2,17 @@ import nodemailer from 'nodemailer';
 import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
-class EmailService {
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: "mail.privateemail.com", // Use your email host
-      port: 465, // Port for secure SMTP
-      secure: true, 
-      auth: {
-        user: config.emailUser,
-        pass: config.emailPassword
-      }
-    });
+const transporter = nodemailer.createTransport({
+  host: config.emailHost,
+  port: config.emailPort,
+  secure: true,
+  auth: {
+    user: config.emailUser,
+    pass: config.emailPassword
   }
+});
 
+export const emailService = {
   async sendEmail(to, { subject, html }) {
     try {
       const mailOptions = {
@@ -24,18 +22,18 @@ class EmailService {
         html
       };
 
-      await this.transporter.sendMail(mailOptions);
-      logger.info(`Email sent successfully to ${to}`);
-      return true;
+      const info = await transporter.sendMail(mailOptions);
+      logger.info('Email sent:', info.messageId);
+      return info;
     } catch (error) {
-      logger.error('Failed to send email:', error);
-      return false;
+      logger.error('Error sending email:', error);
+      throw error;
     }
-  }
+  },
 
   async verifyConnection() {
     try {
-      await this.transporter.verify();
+      await transporter.verify();
       logger.info('Email service connection verified');
       return true;
     } catch (error) {
@@ -43,6 +41,4 @@ class EmailService {
       return false;
     }
   }
-}
-
-export const emailService = new EmailService();
+};

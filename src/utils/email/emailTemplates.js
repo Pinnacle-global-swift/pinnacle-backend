@@ -245,8 +245,8 @@ export const EmailTemplates = {
     }),
 
 
-    cardApplicationStatus: (status) => ({
-        subject: `PINNACLE GLOBAL SWIFT - Card Application ${status}`,
+    cardApplicationStatus: (status, remarks) => ({
+        subject: `PINNACLE GLOBAL SWIFT - Card Application ${status.charAt(0).toUpperCase() + status.slice(1)}`,
         html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -262,45 +262,52 @@ export const EmailTemplates = {
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
                         </td>
                     </tr>
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">Card Application ${status}</h1>
+                            <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">Card Application Status Update</h1>
                             <p style="margin: 0 0 20px;">Dear Valued Customer,</p>
-                            <div style="background-color: ${status.toLowerCase() === 'approved' ? '#e8f5e9' : status.toLowerCase() === 'rejected' ? '#ffebee' : '#fff3e0'}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                            
+                            <div style="background-color: ${status === 'approved' ? '#e8f5e9' : status === 'rejected' ? '#ffebee' : '#fff3e0'}; border-radius: 8px; padding: 20px; margin: 20px 0;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td>
-                                            <p style="margin: 0; font-size: 18px; color: ${status.toLowerCase() === 'approved' ? '#2e7d32' : status.toLowerCase() === 'rejected' ? '#c62828' : '#ef6c00'};">
+                                            <p style="margin: 0; font-size: 18px; color: ${status === 'approved' ? '#2e7d32' : status === 'rejected' ? '#c62828' : '#ef6c00'};">
                                                 Your card application has been <strong>${status}</strong>
                                             </p>
-                                            ${remarks ? `<p style="margin: 10px 0 0; color: #666666;">${remarks}</p>` : ''}
+                                            ${remarks ? `
+                                            <p style="margin: 10px 0 0; color: #666666;">
+                                                <strong>Remarks:</strong> ${remarks}
+                                            </p>
+                                            ` : ''}
                                         </td>
                                     </tr>
                                 </table>
                             </div>
-                            ${status.toLowerCase() === 'approved' ? `
+
+                            ${status === 'approved' ? `
                             <div style="margin: 20px 0;">
-                                <p style="margin: 0 0 10px;">Next steps:</p>
+                                <p style="margin: 0 0 10px;"><strong>Next Steps:</strong></p>
                                 <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
                                     <li style="margin-bottom: 10px;">Your card will be delivered within 5-7 business days</li>
-                                    <li style="margin-bottom: 10px;">You'll receive activation instructions with your card</li>
-                                    <li>Keep an eye on your email for tracking information</li>
+                                    <li style="margin-bottom: 10px;">You'll receive PIN setup instructions separately</li>
+                                    <li>Activate your card upon receipt</li>
                                 </ul>
                             </div>
-                            ` : status.toLowerCase() === 'rejected' ? `
+                            ` : status === 'rejected' ? `
                             <div style="margin: 20px 0;">
-                                <p style="margin: 0 0 10px;">What you can do:</p>
+                                <p style="margin: 0 0 10px;"><strong>What you can do:</strong></p>
                                 <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
-                                    <li style="margin-bottom: 10px;">Review the rejection reasons provided above</li>
+                                    <li style="margin-bottom: 10px;">Review the rejection remarks above</li>
                                     <li style="margin-bottom: 10px;">Contact our support team for more information</li>
-                                    <li>You can reapply after 3 months</li>
+                                    <li>You may reapply after addressing the concerns</li>
                                 </ul>
                             </div>
                             ` : ''}
+
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
                                 <tr>
                                     <td style="background-color: #2A69ED; border-radius: 4px; text-align: center;">
@@ -308,6 +315,7 @@ export const EmailTemplates = {
                                     </td>
                                 </tr>
                             </table>
+
                             <p style="margin: 0; font-style: italic; color: #666666;">If you have any questions, please don't hesitate to contact our support team.</p>
                         </td>
                     </tr>
