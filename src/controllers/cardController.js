@@ -27,14 +27,14 @@ export const cardController = {
       }
 
       // Send email notification
-      await emailService.sendEmail(req.user.email, {
-        subject: 'Card Application Received',
-        html: `Your ${type} card application has been received. ${
-          card.paymentAmount > 0 
-            ? 'Please complete the payment to activate your card.' 
-            : 'Your card will be activated shortly.'
-        }`
-      });
+      // await emailService.sendEmail(req.user.email, {
+      //   subject: 'Card Application Received',
+      //   html: `Your ${type} card application has been received. ${
+      //     card.paymentAmount > 0 
+      //       ? 'Please complete the payment to activate your card.' 
+      //       : 'Your card will be activated shortly.'
+      //   }`
+      // });
 
       res.status(201).json({
         success: true,
