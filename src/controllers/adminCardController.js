@@ -5,6 +5,7 @@ import {EmailTemplates } from "../utils/email/emailTemplates.js"
 
 export const adminCardController = {
   async getCardApplications(req, res, next) {
+    console.log("......", res)
     try {
       const cardApplications = await Card.aggregate([
         {
@@ -24,6 +25,8 @@ export const adminCardController = {
           }
         }
       ]);
+
+console.log(cardApplications)
 
       const stats = {
         pending: cardApplications.filter(app => app.status === 'pending').length,

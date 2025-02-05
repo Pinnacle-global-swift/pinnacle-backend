@@ -10,7 +10,7 @@ const cardSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['virtual', 'physical', 'premium', 'master'] // adjust based on your card types
+    enum: ['virtual', 'physical', 'premium', 'mastercard'] // adjust based on your card types
   },
   cardNumber: {
     type: String,

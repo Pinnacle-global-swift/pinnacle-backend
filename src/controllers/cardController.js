@@ -8,10 +8,10 @@ export const cardController = {
       const { type } = req.body;
 
       // Validate card type
-      if (!type || !['virtual', 'physical', 'premium', ''].includes(type)) {
+      if (!type || !['virtual', 'physical', 'premium', 'mastercard'].includes(type)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid card type. Must be virtual, physical, or premium'
+          error: 'Invalid card type. Must be virtual, physical,mastercard, or premium'
         });
       }
       
