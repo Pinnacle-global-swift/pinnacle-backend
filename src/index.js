@@ -18,6 +18,7 @@ import { notificationRoutes } from './routes/notificationRoutes.js';
 import { publicRoutes } from './routes/publicRoutes.js';
 import { logger } from './utils/logger.js';
 import { kycRoutes } from './routes/kycRoutes.js';
+import { adminCardRoutes } from './routes/adminCardRoutes.js';
 import { withdrawalRoutes } from './routes/withdrawalRoutes.js';
 import { transactionRoutes } from './routes/transactionRoutes.js';
 import { adminKycRoutes } from './routes/adminKycRoutes.js';
@@ -55,6 +56,8 @@ app.use('/api/transfer', transferRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/admin/dashboard/users', adminUserRoutes);
+app.use('/api/admin/cards', adminCardRoutes); 
+
 
 // Error handling
 app.use(notFound);

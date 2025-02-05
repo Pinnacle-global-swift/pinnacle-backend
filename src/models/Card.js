@@ -4,7 +4,7 @@ import { CARD_STATUS } from '../constants/status.js';
 const cardSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'PinnacleUser',
     required: true
   },
   type: {
