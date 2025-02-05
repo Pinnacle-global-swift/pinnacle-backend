@@ -36,6 +36,10 @@ const CARD_CONFIGS = {
   premium: {
     limit: 50000,
     paymentAmount: 100
+  },
+  mastercard: {
+    limit: 50000,
+    paymentAmount: 100
   }
 };
 
