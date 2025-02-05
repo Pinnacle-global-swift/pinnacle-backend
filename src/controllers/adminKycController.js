@@ -94,7 +94,6 @@ export const adminKycController = {
     }
   },
 
-
   async approveKyc(req, res, next) {
     try {
       const { kycId, status, remarks } = req.body;
@@ -235,6 +234,104 @@ export const adminKycController = {
       res.status(200).json({
         success: true,
         data: kyc
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getAllKyc(req, res, next) {
+    try {
+      const { status } = req.query;
+      
+      // Build match condition based on status filter
+      const matchCondition = status ? { status } : {};
+
+      const kycApplications = await KYC.aggregate([
+        {
+          $match: matchCondition
+        },
+        {
+          $lookup: {
+            from: 'pinnacleusers',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        {
+          $project: {
+            applicantName: '$fullName',
+            'user.fullName': 1,
+            'user.email': 1,
+            'user.phoneNumber': 1,
+            documentType: '$idType',
+            documentNumber: '$idNumber',
+            dateOfBirth: 1,
+            documents: 1,
+            status: 1,
+            submittedAt: '$createdAt',
+            verificationDate: 1,
+            additionalInfo: 1,
+            remarks: 1
+          }
+        },
+        {
+          $sort: { submittedAt: -1 }
+        }
+      ]);
+
+      const stats = {
+        total: kycApplications.length,
+        approved: kycApplications.filter(app => app.status === 'approved').length,
+        rejected: kycApplications.filter(app => app.status === 'rejected').length,
+        processing: kycApplications.filter(app => app.status === 'processing').length,
+        withPassport: kycApplications.filter(app => app.documentType === 'passport').length,
+        withNationalId: kycApplications.filter(app => app.documentType === 'national_id').length,
+        withDriversLicense: kycApplications.filter(app => app.documentType === 'drivers_license').length,
+        documentsSubmitted: kycApplications.filter(app => 
+          app.documents?.idFront && 
+          app.documents?.idBack && 
+          app.documents?.selfie && 
+          app.documents?.proofOfAddress
+        ).length
+      };
+
+      const formattedApplications = kycApplications.map(app => ({
+        _id: app._id,
+        applicantDetails: {
+          name: app.applicantName,
+          email: app.user.email,
+          phoneNumber: app.user.phoneNumber,
+          dateOfBirth: app.dateOfBirth
+        },
+        documentInfo: {
+          type: app.documentType,
+          number: app.documentNumber,
+          documents: {
+            idFront: app.documents?.idFront ? true : false,
+            idBack: app.documents?.idBack ? true : false,
+            selfie: app.documents?.selfie ? true : false,
+            proofOfAddress: app.documents?.proofOfAddress ? true : false
+          }
+        },
+        status: app.status,
+        submittedAt: app.submittedAt,
+        verificationDate: app.verificationDate || null,
+        remarks: app.remarks || null,
+        additionalInfo: app.additionalInfo || null
+      }));
+
+      res.status(200).json({
+        success: true,
+        data: {
+          applications: formattedApplications,
+          statistics: stats,
+          totalCount: kycApplications.length
+        }
       });
     } catch (error) {
       next(error);

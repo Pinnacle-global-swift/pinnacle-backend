@@ -11,6 +11,6 @@ export const CARD_REQUIREMENTS = {
   export const CARD_LIMITS = {
     [CARD_TYPES.MASTERCARD]: {
       limit: 10000,
-      paymentAmount: 25
+      paymentAmount: 2000
     }
   };

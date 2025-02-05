@@ -16,3 +16,11 @@ export const TRANSACTION_TYPE = {
     DEPOSIT: 'deposit',
     TRANSFER: 'transfer'
 };
+
+export const CARD_STATUS = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    ACTIVE: 'active',
+    SUSPENDED: 'suspended'
+};

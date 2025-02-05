@@ -8,7 +8,7 @@ export const generateToken = (user) => {
       role: user.role 
     }, 
     config.jwtSecret, 
-    { expiresIn: '30d' }
+    { expiresIn: '30m' }
   );
 };
 

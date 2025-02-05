@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
+import { CARD_STATUS } from '../constants/status.js';
 
 const cardSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'PinnacleUser',
+    ref: 'User',
     required: true
   },
   type: {
     type: String,
-    enum: ['mastercard'],
-    default: 'mastercard',
-    required: true
+    required: true,
+    enum: ['virtual', 'physical', 'premium'] // adjust based on your card types
   },
   cardNumber: {
     type: String,
@@ -40,8 +40,8 @@ const cardSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'active', 'blocked', 'expired', 'rejected'],
-    default: 'pending'
+    enum: Object.values(CARD_STATUS),
+    default: CARD_STATUS.PENDING
   },
   paymentStatus: {
     type: String,
@@ -50,7 +50,7 @@ const cardSchema = new mongoose.Schema({
   },
   paymentAmount: {
     type: Number,
-    required: true
+    default: 0
   },
   paymentMethod: String,
   transactionId: String,
@@ -60,7 +60,13 @@ const cardSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  activationDate: Date
+  activationDate: Date,
+  rejectionReason: {
+    type: String
+  },
+  reappliedAt: {
+    type: Date
+  }
 }, {
   timestamps: true
 });
@@ -73,4 +79,4 @@ cardSchema.pre('save', function(next) {
   next();
 });
 
-export const Card = mongoose.model('PinnacleCard', cardSchema);
+export const Card = mongoose.model('Card', cardSchema);

@@ -1,11 +1,22 @@
 import { cardService } from '../services/cardService.js';
 import { emailService } from '../utils/email/emailService.js';
+import { CARD_STATUS } from '../constants/status.js';
 
 export const cardController = {
   async applyCard(req, res, next) {
     try {
       const { type } = req.body;
-      const card = await cardService.applyForCard(req.user.id, type);
+      
+      // Check if user has a rejected card application
+      const existingCard = await cardService.getCardStatus(req.user.id);
+      
+      // If card exists and is rejected, update it instead of creating new
+      let card;
+      if (existingCard && existingCard.status === CARD_STATUS.REJECTED) {
+        card = await cardService.reapplyCard(req.user.id, type);
+      } else {
+        card = await cardService.applyForCard(req.user.id, type);
+      }
 
       // Send email notification
       await emailService.sendEmail(req.user.email, {

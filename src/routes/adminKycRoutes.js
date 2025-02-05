@@ -56,4 +56,30 @@ router.post(
   adminKycController.approveKyc
 );
 
+/**
+ * @swagger
+ * /api/admin/kyc:
+ *   get:
+ *     summary: Get all KYC applications with optional status filter
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [processing, approved, rejected, additional_info_required]
+ *         description: Filter applications by status
+ *     responses:
+ *       200:
+ *         description: List of KYC applications retrieved successfully
+ */
+router.get(
+  '/',
+  authenticate,
+  authorize('admin'),
+  adminKycController.getAllKyc
+);
+
 export const adminKycRoutes = router;

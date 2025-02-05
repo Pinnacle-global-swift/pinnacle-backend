@@ -3,6 +3,7 @@ import { ValidationError } from '../utils/errors.js';
 import { CardGenerator } from '../utils/cardGenerator.js';
 import { cardValidator } from '../validators/cardValidator.js';
 import { CARD_TYPES, CARD_LIMITS } from '../constants/cardConstants.js';
+import { CARD_STATUS } from '../constants/status.js';
 
 export const cardService = {
   // async applyForCard(userId, type = CARD_TYPES.MASTERCARD) {
@@ -42,41 +43,44 @@ export const cardService = {
   //       });
   //     },
 
-  async applyForCard(userId, type = CARD_TYPES.MASTERCARD) {
-    // Check for existing card
-    const existingCard = await Card.findOne({ userId });
+  async applyForCard(userId, type) {
+    const existingCard = await Card.findOne({ 
+      userId,
+      status: { $nin: [CARD_STATUS.REJECTED] } // Allow reapply if previous was rejected
+    });
+    
     if (existingCard) {
-      throw new ValidationError('You already have a card application');
+      throw new Error('Card application already exists');
     }
 
-    // Validate all requirements
-    await cardValidator.validateAll(userId);
-
-    // Get card limits
-    const limits = CARD_LIMITS[type];
-    if (!limits) {
-      throw new ValidationError('Invalid card type');
-    }
-
-    // Generate card details
-    const cardDetails = CardGenerator.generateCardDetails();
-
-    // Create card with pending status
     return await Card.create({
       userId,
       type,
-      cardNumber: cardDetails.number,
-      maskedCardNumber: `****-****-****-${cardDetails.number.slice(-4)}`,
-      cvv: cardDetails.cvv,
-      expiryMonth: cardDetails.expiryMonth,
-      expiryYear: cardDetails.expiryYear,
-      limit: limits.limit,
-      paymentAmount: limits.paymentAmount,
-      status: 'pending',
-      paymentStatus: 'pending'
+      status: CARD_STATUS.PENDING
     });
   },
 
+  async reapplyCard(userId, type) {
+    const card = await Card.findOne({ userId });
+    if (!card) {
+      throw new Error('No previous card application found');
+    }
+
+    if (card.status !== CARD_STATUS.REJECTED) {
+      throw new Error('Can only reapply for rejected cards');
+    }
+
+    // Reset card status and update type if changed
+    card.status = CARD_STATUS.PENDING;
+    card.type = type;
+    card.reappliedAt = new Date();
+    
+    // Clear any previous rejection reasons
+    card.rejectionReason = null;
+    
+    await card.save();
+    return card;
+  },
 
   async processPayment(userId, paymentMethod, transactionId) {
     const card = await Card.findOne({ userId });
