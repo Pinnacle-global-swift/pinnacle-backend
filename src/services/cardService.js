@@ -1,81 +1,108 @@
 import { Card } from '../models/Card.js';
 import { ValidationError } from '../utils/errors.js';
-import { CardGenerator } from '../utils/cardGenerator.js';
-import { cardValidator } from '../validators/cardValidator.js';
-import { CARD_TYPES, CARD_LIMITS } from '../constants/cardConstants.js';
 import { CARD_STATUS } from '../constants/status.js';
 
+// Helper function to generate card details
+const generateCardDetails = () => {
+  // Generate a random 16-digit card number
+  const cardNumber = Array.from({ length: 16 }, () => Math.floor(Math.random() * 10)).join('');
+  
+  // Generate CVV (3 digits)
+  const cvv = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
+  
+  // Set expiry date (4 years from now)
+  const expiryDate = new Date();
+  expiryDate.setFullYear(expiryDate.getFullYear() + 4);
+  
+  return {
+    cardNumber,
+    cvv,
+    expiryMonth: String(expiryDate.getMonth() + 1).padStart(2, '0'),
+    expiryYear: String(expiryDate.getFullYear()),
+    maskedCardNumber: `****-****-****-${cardNumber.slice(-4)}`
+  };
+};
+
+// Card type configurations
+const CARD_CONFIGS = {
+  virtual: {
+    limit: 5000,
+    paymentAmount: 0
+  },
+  physical: {
+    limit: 10000,
+    paymentAmount: 25
+  },
+  premium: {
+    limit: 50000,
+    paymentAmount: 100
+  }
+};
+
 export const cardService = {
-  // async applyForCard(userId, type = CARD_TYPES.MASTERCARD) {
-  //       // Check for existing card
-  //       const existingCard = await Card.findOne({ userId });
-  //       if (existingCard) {
-  //         throw new ValidationError('You already have a card application');
-  //       }
-    
-  // // Validate all requirements
-  // await cardValidator.validateAll(userId);
-
-  //       // Generate card details
-  //       const cardDetails = CardGenerator.generateCardDetails();
-        
-  //       // Set limits based on card type
-
-
-
-  //       const limits = CARD_LIMITS[type];
-  //       if (!limits) {
-  //         throw new ValidationError('Invalid card type');
-  //       }
-    
-  //       // Create initial card with pending status
-  //       return await Card.create({
-  //         userId,
-  //         type,
-  //         cardNumber: cardDetails.number,
-  //         cvv: cardDetails.cvv,
-  //         expiryMonth: cardDetails.expiryMonth,
-  //         expiryYear: cardDetails.expiryYear,
-  //         limit: limits.limit,
-  //         paymentAmount: limits.paymentAmount,
-  //         status: 'processing',
-  //         paymentStatus: 'pending'
-  //       });
-  //     },
-
   async applyForCard(userId, type) {
+    // Validate card type
+    if (!CARD_CONFIGS[type]) {
+      throw new ValidationError('Invalid card type. Must be virtual, physical, or premium');
+    }
+
     const existingCard = await Card.findOne({ 
       userId,
-      status: { $nin: [CARD_STATUS.REJECTED] } // Allow reapply if previous was rejected
+      status: { $nin: [CARD_STATUS.REJECTED] }
     });
     
     if (existingCard) {
-      throw new Error('Card application already exists');
+      throw new ValidationError('Card application already exists');
     }
 
+    // Generate card details
+    const cardDetails = generateCardDetails();
+    const config = CARD_CONFIGS[type];
+
+    // Create new card with all required fields
     return await Card.create({
       userId,
       type,
-      status: CARD_STATUS.PENDING
+      status: CARD_STATUS.PENDING,
+      cardNumber: cardDetails.cardNumber,
+      maskedCardNumber: cardDetails.maskedCardNumber,
+      cvv: cardDetails.cvv,
+      expiryMonth: cardDetails.expiryMonth,
+      expiryYear: cardDetails.expiryYear,
+      limit: config.limit,
+      paymentAmount: config.paymentAmount
     });
   },
 
   async reapplyCard(userId, type) {
     const card = await Card.findOne({ userId });
     if (!card) {
-      throw new Error('No previous card application found');
+      throw new ValidationError('No previous card application found');
     }
 
     if (card.status !== CARD_STATUS.REJECTED) {
-      throw new Error('Can only reapply for rejected cards');
+      throw new ValidationError('Can only reapply for rejected cards');
     }
 
-    // Reset card status and update type if changed
+    // Validate new card type
+    if (!CARD_CONFIGS[type]) {
+      throw new ValidationError('Invalid card type. Must be virtual, physical, or premium');
+    }
+
+    const config = CARD_CONFIGS[type];
+    const cardDetails = generateCardDetails();
+
+    // Update card with new details
     card.status = CARD_STATUS.PENDING;
     card.type = type;
+    card.cardNumber = cardDetails.cardNumber;
+    card.maskedCardNumber = cardDetails.maskedCardNumber;
+    card.cvv = cardDetails.cvv;
+    card.expiryMonth = cardDetails.expiryMonth;
+    card.expiryYear = cardDetails.expiryYear;
+    card.limit = config.limit;
+    card.paymentAmount = config.paymentAmount;
     card.reappliedAt = new Date();
-    
-    // Clear any previous rejection reasons
     card.rejectionReason = null;
     
     await card.save();
@@ -126,14 +153,6 @@ export const cardService = {
       throw error;
     }
   },
-
-  // async getCardStatus(userId) {
-  //   const card = await Card.findOne({ userId });
-  //   return {
-  //     hasCard: !!card,
-  //     cardDetails: card
-  //   };
-  // }
 
   async getCardStatus(userId) {
     const card = await Card.findOne({ userId })

@@ -6,13 +6,21 @@ export const cardController = {
   async applyCard(req, res, next) {
     try {
       const { type } = req.body;
+
+      // Validate card type
+      if (!type || !['virtual', 'physical', 'premium', ''].includes(type)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid card type. Must be virtual, physical, or premium'
+        });
+      }
       
       // Check if user has a rejected card application
       const existingCard = await cardService.getCardStatus(req.user.id);
       
       // If card exists and is rejected, update it instead of creating new
       let card;
-      if (existingCard && existingCard.status === CARD_STATUS.REJECTED) {
+      if (existingCard.hasCard && existingCard.cardDetails?.status === CARD_STATUS.REJECTED) {
         card = await cardService.reapplyCard(req.user.id, type);
       } else {
         card = await cardService.applyForCard(req.user.id, type);
