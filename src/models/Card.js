@@ -41,7 +41,8 @@ const cardSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: Object.values(CARD_STATUS),
-    default: CARD_STATUS.PENDING
+    default: CARD_STATUS.PENDING,
+    set: (value) => value.toLowerCase()
   },
   paymentStatus: {
     type: String,

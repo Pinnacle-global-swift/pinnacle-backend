@@ -66,8 +66,14 @@ router.post(
   [
     body('cardId').isMongoId().withMessage('Valid card ID is required'),
     body('status')
-      .isIn([CARD_STATUS.APPROVED, CARD_STATUS.REJECTED])
-      .withMessage('Valid status required'),
+      .custom(value => {
+        const normalizedStatus = value.toLowerCase();
+        const validStatuses = [CARD_STATUS.APPROVED, CARD_STATUS.REJECTED].map(s => s.toLowerCase());
+        if (!validStatuses.includes(normalizedStatus)) {
+          throw new Error(`Status must be one of: ${validStatuses.join(', ')}`);
+        }
+        return true;
+      }),
     body('remarks').optional().trim().isLength({ max: 500 })
   ],
   validate,

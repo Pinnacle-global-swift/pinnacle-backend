@@ -245,9 +245,10 @@ export const EmailTemplates = {
     }),
 
 
-    cardApplicationStatus: (status, remarks) => ({
+    cardApplicationStatus: (status, type, remarks) => ({
         subject: `PINNACLE GLOBAL SWIFT - Card Application ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-        html: `<!DOCTYPE html>
+        html: `
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -271,12 +272,13 @@ export const EmailTemplates = {
                             <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">Card Application Status Update</h1>
                             <p style="margin: 0 0 20px;">Dear Valued Customer,</p>
                             
-                            <div style="background-color: ${status === 'approved' ? '#e8f5e9' : status === 'rejected' ? '#ffebee' : '#fff3e0'}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                            <!-- Status Message -->
+                            <div style="background-color: ${status === 'approved' ? '#e8f5e9' : '#ffebee'}; border-radius: 8px; padding: 20px; margin: 20px 0;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td>
-                                            <p style="margin: 0; font-size: 18px; color: ${status === 'approved' ? '#2e7d32' : status === 'rejected' ? '#c62828' : '#ef6c00'};">
-                                                Your card application has been <strong>${status}</strong>
+                                            <p style="margin: 0; font-size: 18px; color: ${status === 'approved' ? '#2e7d32' : '#c62828'};">
+                                                Your ${type} card application has been <strong>${status}</strong>
                                             </p>
                                             ${remarks ? `
                                             <p style="margin: 10px 0 0; color: #666666;">
@@ -288,30 +290,33 @@ export const EmailTemplates = {
                                 </table>
                             </div>
 
+                            <!-- Next Steps -->
                             ${status === 'approved' ? `
                             <div style="margin: 20px 0;">
                                 <p style="margin: 0 0 10px;"><strong>Next Steps:</strong></p>
                                 <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
-                                    <li style="margin-bottom: 10px;">Your card will be delivered within 5-7 business days</li>
+                                    <li style="margin-bottom: 10px;">Your card will be processed and delivered within 5-7 business days</li>
                                     <li style="margin-bottom: 10px;">You'll receive PIN setup instructions separately</li>
-                                    <li>Activate your card upon receipt</li>
+                                    <li style="margin-bottom: 10px;">Activate your card upon receipt</li>
+                                    <li>Set up your PIN for secure transactions</li>
                                 </ul>
                             </div>
-                            ` : status === 'rejected' ? `
+                            ` : `
                             <div style="margin: 20px 0;">
                                 <p style="margin: 0 0 10px;"><strong>What you can do:</strong></p>
                                 <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
                                     <li style="margin-bottom: 10px;">Review the rejection remarks above</li>
-                                    <li style="margin-bottom: 10px;">Contact our support team for more information</li>
+                                    <li style="margin-bottom: 10px;">Contact our support team for clarification</li>
                                     <li>You may reapply after addressing the concerns</li>
                                 </ul>
                             </div>
-                            ` : ''}
+                            `}
 
+                            <!-- Action Button -->
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
                                 <tr>
                                     <td style="background-color: #2A69ED; border-radius: 4px; text-align: center;">
-                                        <a href="#" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;">View Application Details</a>
+                                        <a href="#" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;">View Card Details</a>
                                     </td>
                                 </tr>
                             </table>
@@ -336,7 +341,8 @@ export const EmailTemplates = {
         </tr>
     </table>
 </body>
-</html>`
+</html>
+    `
     })
 
 

@@ -2,6 +2,7 @@ import { Card } from '../models/Card.js';
 import { CARD_STATUS } from '../constants/status.js';
 import { emailService } from '../utils/email/emailService.js';
 import { ValidationError } from '../utils/errors.js';
+import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 export const adminCardController = {
   async getCardApplications(req, res, next) {
@@ -69,13 +70,23 @@ export const adminCardController = {
   async processCardApplication(req, res, next) {
     try {
       const { cardId, status, remarks } = req.body;
+      console.log('Request body:', { cardId, status, remarks });
+      console.log('Valid statuses:', [CARD_STATUS.APPROVED, CARD_STATUS.REJECTED]);
 
       if (!cardId || !status) {
         throw new ValidationError('Card ID and status are required');
       }
 
-      if (![CARD_STATUS.APPROVED, CARD_STATUS.REJECTED].includes(status)) {
-        throw new ValidationError('Invalid status. Must be approved or rejected');
+      // Convert status to lowercase for comparison
+      const normalizedStatus = status.toLowerCase();
+      console.log('Normalized status:', normalizedStatus);
+
+      // Check if status is valid
+      const validStatuses = [CARD_STATUS.APPROVED, CARD_STATUS.REJECTED].map(s => s.toLowerCase());
+      console.log('Valid statuses (lowercase):', validStatuses);
+      
+      if (!validStatuses.includes(normalizedStatus)) {
+        throw new ValidationError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
       }
 
       const card = await Card.findById(cardId).populate('userId', 'email fullName');
@@ -83,43 +94,31 @@ export const adminCardController = {
         throw new ValidationError('Card application not found');
       }
 
+      console.log('Current card status:', card.status);
       if (card.status !== CARD_STATUS.PENDING) {
         throw new ValidationError('Can only process pending applications');
       }
 
-      // Update card status
-      card.status = status;
+      // Update card status with normalized value
+      card.status = normalizedStatus;
       card.remarks = remarks;
       card.processedAt = new Date();
       card.processedBy = req.user.id;
 
       await card.save();
 
-      // Send email notification
-      const emailSubject = status === CARD_STATUS.APPROVED 
-        ? 'Card Application Approved'
-        : 'Card Application Update';
-
-      const emailContent = status === CARD_STATUS.APPROVED
-        ? `Your ${card.type} card application has been approved. ${
-            card.paymentAmount > 0 
-              ? 'Please complete the payment to activate your card.'
-              : 'Your card will be activated shortly.'
-          }`
-        : `Your ${card.type} card application has been rejected. ${
-            remarks ? `Reason: ${remarks}` : ''
-          }`;
-
-      await emailService.sendEmail(card.userId.email, {
-        subject: emailSubject,
-        html: emailContent
-      });
+      // Send email notification using the new template
+      await emailService.sendEmail(
+        card.userId.email,
+        EmailTemplates.cardApplicationStatus(normalizedStatus, card.type, remarks)
+      );
 
       res.status(200).json({
         success: true,
         data: card
       });
     } catch (error) {
+      console.error('Error processing card application:', error);
       next(error);
     }
   }
