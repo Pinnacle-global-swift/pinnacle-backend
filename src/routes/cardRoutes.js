@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import { cardController } from '../controllers/cardController.js';
 import { cardPinController } from '../controllers/cardPinController.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -202,12 +203,35 @@ const router = express.Router();
  *         description: Not authenticated
  */
 
-const cardApplicationValidation = [
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+const cardValidation = [
   body('type')
-    .optional()
-    .isIn(['mastercard'])
+    .isIn(['virtual', 'physical', 'premium', 'mastercard'])
     .withMessage('Invalid card type')
 ];
+
+router.post(
+  '/apply',
+  authenticate,
+  upload.fields([{ name: 'paymentReceipt', maxCount: 1 }]),
+  cardValidation,
+  validate,
+  cardController.applyCard
+);
 
 const paymentValidation = [
   body('paymentMethod')
@@ -218,7 +242,6 @@ const paymentValidation = [
     .withMessage('Transaction ID is required')
 ];
 
-router.post('/apply', authenticate, cardApplicationValidation, validate, cardController.applyCard);
 router.post('/payment', authenticate, paymentValidation, validate, cardController.processPayment);
 router.get('/status', authenticate, cardController.getCardStatus);
 

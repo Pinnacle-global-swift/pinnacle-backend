@@ -1,6 +1,9 @@
 import { cardService } from '../services/cardService.js';
 import { emailService } from '../utils/email/emailService.js';
 import { CARD_STATUS } from '../constants/status.js';
+import { uploadToS3 } from '../utils/s3Upload.js';
+import { User } from '../models/User.js';
+import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 export const cardController = {
   async applyCard(req, res, next) {
@@ -11,7 +14,30 @@ export const cardController = {
       if (!type || !['virtual', 'physical', 'premium', 'mastercard'].includes(type)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid card type. Must be virtual, physical,mastercard, or premium'
+          error: 'Invalid card type. Must be virtual, physical, mastercard, or premium'
+        });
+      }
+
+      // Validate receipt file
+      if (!req.files || !req.files.paymentReceipt) {
+        return res.status(400).json({
+          success: false,
+          error: 'Payment receipt is required'
+        });
+      }
+
+      // Upload receipt to S3
+      let receiptUrl;
+      try {
+        receiptUrl = await uploadToS3(
+          req.files.paymentReceipt[0], 
+          'card-receipts'
+        );
+      } catch (error) {
+        console.error('Receipt upload error:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload payment receipt'
         });
       }
       
@@ -21,27 +47,34 @@ export const cardController = {
       // If card exists and is rejected, update it instead of creating new
       let card;
       if (existingCard.hasCard && existingCard.cardDetails?.status === CARD_STATUS.REJECTED) {
-        card = await cardService.reapplyCard(req.user.id, type);
+        card = await cardService.reapplyCard(req.user.id, type, receiptUrl);
       } else {
-        card = await cardService.applyForCard(req.user.id, type);
+        card = await cardService.applyForCard(req.user.id, type, receiptUrl);
+      }
+
+      // Get user for email
+      const user = await User.findById(req.user.id);
+      if (!user || !user.email) {
+        throw new Error('User email not found');
       }
 
       // Send email notification
-      // await emailService.sendEmail(req.user.email, {
-      //   subject: 'Card Application Received',
-      //   html: `Your ${type} card application has been received. ${
-      //     card.paymentAmount > 0 
-      //       ? 'Please complete the payment to activate your card.' 
-      //       : 'Your card will be activated shortly.'
-      //   }`
-      // });
+      const emailTemplate = EmailTemplates.cardApplicationStatus('pending', type);
+      await emailService.sendEmail(user.email, emailTemplate);
 
       res.status(201).json({
         success: true,
         data: card
       });
     } catch (error) {
-      next(error);
+      console.error('Card Application Error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: error.message || 'Failed to process card application',
+          code: error.code || 500
+        }
+      });
     }
   },
 

@@ -164,84 +164,41 @@ export const EmailTemplates = {
     }),
 
 
-    verifyKys: () => ({
-        subject: 'PINNACLE GLOBAL SWIFT -  KYC Verification Submitted',
-        html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PINNACLE GLOBAL SWIFT - KYC Verification Submitted</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333; background-color: #f4f4f4;">
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f4;">
-        <tr>
-            <td style="padding: 20px 0;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td style="background-color: #2A69ED; padding: 30px 40px; text-align: center;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15text=Pinnacle+Global+Bank" alt="PINNACLE GLOBAL SWIFT Logo" style="max-width: 200px; height: auto;">
-                        </td>
-                    </tr>
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding: 40px;">
-                            <h1 style="margin: 0 0 20px; font-size: 28px; color: #2A69ED;">KYC Verification Submitted</h1>
-                            <p style="margin: 0 0 20px;">Dear Valued Customer,</p>
-                            <div style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                    <tr>
-                                        <td>
-                                            <p style="margin: 0; font-size: 18px; color: #ef6c00;">
-                                                Your KYC verification has been submitted and is under review.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div style="margin: 20px 0;">
-                                <p style="margin: 0 0 10px;">What happens next:</p>
-                                <ul style="margin: 0; padding: 0 0 0 20px; color: #666666;">
-                                    <li style="margin-bottom: 10px;">Our team will review your submitted documents</li>
-                                    <li style="margin-bottom: 10px;">The verification process typically takes 1-2 business days</li>
-                                    <li style="margin-bottom: 10px;">You'll receive an email notification once the review is complete</li>
-                                    <li>If additional information is needed, we'll contact you promptly</li>
-                                </ul>
-                            </div>
-                            <div style="background-color: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                                <p style="margin: 0; color: #666666;">
-                                    <strong>Note:</strong> During the review process, you can continue to use your account with current limitations. Full account features will be available once your KYC verification is approved.
-                                </p>
-                            </div>
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
-                                <tr>
-                                    <td style="background-color: #2A69ED; border-radius: 4px; text-align: center;">
-                                        <a href="#" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;">Check Verification Status</a>
-                                    </td>
-                                </tr>
-                            </table>
-                            <p style="margin: 0; font-style: italic; color: #666666;">If you have any questions about the verification process, please contact our support team.</p>
-                        </td>
-                    </tr>
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f8f8f8; padding: 20px 40px; text-align: center; font-size: 14px; color: #666666;">
-                            <p style="margin: 0 0 10px;">© ${new Date().getFullYear()} PINNACLE GLOBAL SWIFT. All rights reserved.</p>
-                            <p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
-                            <p style="margin: 10px 0 0;">
-                                <a href="#" style="color: #2A69ED; text-decoration: none;">Privacy Policy</a> | 
-                                <a href="#" style="color: #2A69ED; text-decoration: none;">Terms of Service</a> | 
-                                <a href="#" style="color: #2A69ED; text-decoration: none;">Contact Support</a>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>`
+    verifyKyc: () => ({
+        subject: 'KYC Verification Submitted',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; }
+              .container { padding: 20px; }
+              .header { color: #2A69ED; }
+              .content { margin: 20px 0; }
+              .footer { color: #666; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h2 class="header">KYC Verification Submitted</h2>
+              <div class="content">
+                <p>Your KYC verification documents have been successfully submitted.</p>
+                <p>Our team will review your documents and update you on the status within 24-48 hours.</p>
+                <p>Please note:</p>
+                <ul>
+                  <li>You will receive an email notification once the verification is complete</li>
+                  <li>You may check your KYC status in your account dashboard</li>
+                  <li>Additional documents may be requested if needed</li>
+                </ul>
+              </div>
+              <div class="footer">
+                <p>This is an automated message, please do not reply.</p>
+                <p>© ${new Date().getFullYear()} Pinnacle Global Swift. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
     }),
 
 

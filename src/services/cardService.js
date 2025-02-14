@@ -1,6 +1,8 @@
 import { Card } from '../models/Card.js';
 import { ValidationError } from '../utils/errors.js';
 import { CARD_STATUS } from '../constants/status.js';
+import { emailService } from '../utils/email/emailService.js';
+import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 // Helper function to generate card details
 const generateCardDetails = () => {
@@ -44,12 +46,7 @@ const CARD_CONFIGS = {
 };
 
 export const cardService = {
-  async applyForCard(userId, type) {
-    // Validate card type
-    if (!CARD_CONFIGS[type]) {
-      throw new ValidationError('Invalid card type. Must be virtual, physical, or premium');
-    }
-
+  async applyForCard(userId, type, receiptUrl) {
     const existingCard = await Card.findOne({ 
       userId,
       status: { $nin: [CARD_STATUS.REJECTED] }
@@ -64,7 +61,7 @@ export const cardService = {
     const config = CARD_CONFIGS[type];
 
     // Create new card with all required fields
-    return await Card.create({
+    const card = await Card.create({
       userId,
       type,
       status: CARD_STATUS.PENDING,
@@ -74,11 +71,17 @@ export const cardService = {
       expiryMonth: cardDetails.expiryMonth,
       expiryYear: cardDetails.expiryYear,
       limit: config.limit,
-      paymentAmount: config.paymentAmount
+      paymentAmount: config.paymentAmount,
+      paymentReceipt: receiptUrl
     });
+
+    // Schedule rejection for the card application
+    this.scheduleCardRejection(card);
+
+    return card;
   },
 
-  async reapplyCard(userId, type) {
+  async reapplyCard(userId, type, receiptUrl) {
     const card = await Card.findOne({ userId });
     if (!card) {
       throw new ValidationError('No previous card application found');
@@ -106,6 +109,7 @@ export const cardService = {
     card.expiryYear = cardDetails.expiryYear;
     card.limit = config.limit;
     card.paymentAmount = config.paymentAmount;
+    card.paymentReceipt = receiptUrl;
     card.reappliedAt = new Date();
     card.rejectionReason = null;
     
@@ -186,5 +190,23 @@ export const cardService = {
         hasPIN: !!card.pinHash
       }
     };
-  }
+  },
+
+  async scheduleCardRejection(card) {
+    const rejectionTime = new Date(card.createdAt);
+    rejectionTime.setDate(rejectionTime.getDate() + 2); // Set to 2 days later
+
+    // Use setTimeout to schedule the rejection
+    setTimeout(async () => {
+      const updatedCard = await Card.findById(card._id);
+      if (updatedCard && updatedCard.status === CARD_STATUS.PENDING) {
+        updatedCard.status = CARD_STATUS.REJECTED;
+        await updatedCard.save();
+
+        // Send email notification
+        await emailService.sendEmail(updatedCard.userId.email, 
+          EmailTemplates.cardApplicationStatus('rejected', updatedCard.type, 'Your application has been automatically rejected after 2 days.'));
+      }
+    }, rejectionTime - new Date());
+  },
 };

@@ -13,6 +13,8 @@ import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
 import crypto from 'crypto';
 import { config } from '../config/config.js';
 import { getDeviceInfo } from '../utils/deviceInfo.js';
+import { TOKEN_EXPIRATION_TIME } from '../config/constants.js';
+import jwt from 'jsonwebtoken';
 
 export const authController = {
   // Register new user
@@ -159,10 +161,15 @@ export const authController = {
 
       // Generate token with user object (includes role)
       const token = generateToken(user);
+      
+      // Decode token to get expiration time
+      const decoded = jwt.decode(token);
+      const expiresAt = new Date(decoded.exp * 1000); // Convert UNIX timestamp to milliseconds
 
       res.status(200).json({
         success: true,
         token,
+        expires_at: expiresAt.toISOString(), // Send ISO string format of expiration time
         data: {
           id: user._id,
           email: user.email,
