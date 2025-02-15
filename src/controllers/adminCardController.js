@@ -1,65 +1,41 @@
 import { Card } from '../models/Card.js';
+import { User } from '../models/User.js';
 import { CARD_STATUS } from '../constants/status.js';
 import { emailService } from '../utils/email/emailService.js';
 import { ValidationError } from '../utils/errors.js';
 import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 export const adminCardController = {
-  async getCardApplications(req, res, next) {
+  async getAllCards(req, res, next) {
     try {
-      const { status } = req.query;
-      
-      // Build match condition based on status filter
-      const matchCondition = status ? { status } : {};
+      const { status, page = 1, limit = 10 } = req.query;
+      const skip = (page - 1) * limit;
 
-      const cardApplications = await Card.aggregate([
-        {
-          $match: matchCondition
-        },
-        {
-          $lookup: {
-            from: 'pinnacleusers',
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'user'
-          }
-        },
-        {
-          $unwind: '$user'
-        },
-        {
-          $project: {
-            type: 1,
-            status: 1,
-            paymentStatus: 1,
-            paymentAmount: 1,
-            limit: 1,
-            maskedCardNumber: 1,
-            submittedAt: '$createdAt',
-            'user.fullName': 1,
-            'user.email': 1,
-            rejectionReason: 1,
-            remarks: 1
-          }
-        },
-        {
-          $sort: { submittedAt: -1 }
-        }
-      ]);
+      // Build query
+      const query = {};
+      if (status) {
+        query.status = status;
+      }
 
-      const stats = {
-        total: cardApplications.length,
-        pending: cardApplications.filter(app => app.status === CARD_STATUS.PENDING).length,
-        approved: cardApplications.filter(app => app.status === CARD_STATUS.APPROVED).length,
-        rejected: cardApplications.filter(app => app.status === CARD_STATUS.REJECTED).length,
-        active: cardApplications.filter(app => app.status === CARD_STATUS.ACTIVE).length
-      };
+      // Get cards with pagination
+      const cards = await Card.find(query)
+        .populate('userId', 'email fullName uniqueId')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+      // Get total count
+      const totalCount = await Card.countDocuments(query);
 
       res.status(200).json({
         success: true,
         data: {
-          applications: cardApplications,
-          statistics: stats
+          cards,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalCount / limit),
+            totalCount
+          }
         }
       });
     } catch (error) {
@@ -70,46 +46,44 @@ export const adminCardController = {
   async processCardApplication(req, res, next) {
     try {
       const { cardId, status, remarks } = req.body;
-      console.log('Request body:', { cardId, status, remarks });
 
-      if (!cardId || !status) {
-        throw new ValidationError('Card ID and status are required');
-      }
-
-      // Simplified status validation
-      if (!['approved', 'rejected'].includes(status.toLowerCase())) {
-        throw new ValidationError('Status must be either approved or rejected');
-      }
-
-      const card = await Card.findById(cardId).populate('userId', 'email fullName');
+      const card = await Card.findById(cardId).populate('userId', 'email');
       if (!card) {
-        throw new ValidationError('Card application not found');
-      }
-
-      if (card.status !== CARD_STATUS.PENDING) {
-        throw new ValidationError('Can only process pending applications');
+        return res.status(404).json({
+          success: false,
+          error: 'Card application not found'
+        });
       }
 
       // Update card status
-      card.status = status.toLowerCase();
-      card.remarks = remarks;
-      card.processedAt = new Date();
-      card.processedBy = req.user.id;
+      card.status = status;
+      if (remarks) {
+        card.remarks = remarks;
+      }
+
+      if (status === CARD_STATUS.APPROVED) {
+        card.activationDate = new Date();
+      } else if (status === CARD_STATUS.REJECTED) {
+        card.rejectionReason = remarks || 'Application rejected by admin';
+      }
 
       await card.save();
 
-      // Send email notification using the template
-      await emailService.sendEmail(
-        card.userId.email,
-        EmailTemplates.cardApplicationStatus(status.toLowerCase(), card.type, remarks)
-      );
+      // Send email notification
+      if (card.userId && card.userId.email) {
+        const emailTemplate = EmailTemplates.cardApplicationStatus(
+          status,
+          card.type,
+          remarks
+        );
+        await emailService.sendEmail(card.userId.email, emailTemplate);
+      }
 
       res.status(200).json({
         success: true,
         data: card
       });
     } catch (error) {
-      console.error('Error processing card application:', error);
       next(error);
     }
   }

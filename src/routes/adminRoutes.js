@@ -1,17 +1,14 @@
 import express from 'express';
 import { adminController } from '../controllers/adminController.js';
-import { authenticate } from '../middleware/authenticate.js';
 import { adminKycController } from '../controllers/adminKycController.js';
 import { adminCardController } from '../controllers/adminCardController.js';
 import { adminTransactionController } from '../controllers/adminTransactionController.js';
+import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { validate } from '../middleware/validate.js';
-import { body } from 'express-validator';
-
-
+import { body, query } from 'express-validator';
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -59,81 +56,63 @@ const transferValidation = [
 // Protect all admin routes
 router.use(authenticate, authorize('admin'));
 
-// Transfer route
-router.post('/transfer', transferValidation, validate, adminController.adminTransferByAccount);
-
-// Existing routes
+// Admin Dashboard
 router.get('/dashboard/stats', adminController.getDashboardStats);
-router.get('/users', adminController.getAllUsers);
-router.get('/cards', adminController.getCardRequests);
-router.put('/cards/:cardId/status', adminController.updateCardStatus);
-router.get('/notifications', adminController.getAdminNotifications);
-router.post('/notifications/mark-read', adminController.markNotificationsAsRead);
 
-
-
-// KYC Routes
-router.get(
-  '/kyc/pending',
-  authenticate,
-  authorize('admin'),
-  adminKycController.getPendingKyc
-);
+// Admin KYC Routes
+router.get('/kyc', adminKycController.getAllKyc);
 
 router.post(
-  '/kyc/approve',
-  authenticate,
-  authorize('admin'),
+  '/kyc/process',
   [
-    body('kycId').isMongoId(),
-    body('status').isIn(['approved', 'rejected']),
-    body('remarks').optional().isString()
+    body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
+    body('status').isIn(['approved', 'rejected']).withMessage('Invalid status'),
+    body('remarks').optional().trim()
   ],
   validate,
-  adminKycController.approveKyc
+  adminKycController.processKyc
 );
 
-// Card Routes
+// Admin Card Routes
 router.get(
   '/cards',
-  authenticate,
-  authorize('admin'),
-  adminCardController.getCardApplications
+  [
+    query('status')
+      .optional()
+      .isIn(['pending', 'approved', 'rejected', 'active'])
+      .withMessage('Invalid status'),
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 })
+  ],
+  validate,
+  adminCardController.getAllCards
 );
 
 router.post(
   '/cards/process',
-  authenticate,
-  authorize('admin'),
   [
-    body('cardId').isMongoId(),
-    body('status').isIn(['active', 'rejected', "blocked"]),
-    body('remarks').optional().isString()
+    body('cardId').isMongoId().withMessage('Valid card ID is required'),
+    body('status')
+      .isIn(['approved', 'rejected'])
+      .withMessage('Status must be either approved or rejected'),
+    body('remarks').optional().trim().isLength({ max: 500 })
   ],
   validate,
   adminCardController.processCardApplication
 );
 
-// Transaction Routes
-router.get(
-  '/transactions/pending',
-  authenticate,
-  authorize('admin'),
-  adminTransactionController.getPendingTransactions
-);
-
+// Admin Transaction Routes
 router.post(
-  '/transactions/approve',
-  authenticate,
-  authorize('admin'),
+  '/transactions/process',
   [
-    body('transactionId').isMongoId(),
-    body('status').isIn(['approved', 'rejected', 'completed', 'failed']),
-    body('remarks').optional().isString()
+    body('transactionId').isMongoId().withMessage('Valid transaction ID is required'),
+    body('status')
+      .isIn(['approved', 'rejected'])
+      .withMessage('Status must be either approved or rejected'),
+    body('remarks').optional().trim()
   ],
   validate,
-  adminTransactionController.approveTransaction
+  adminTransactionController.processTransaction
 );
-
 
 export const adminRoutes = router;

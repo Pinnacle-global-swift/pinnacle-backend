@@ -82,4 +82,6 @@ router.get(
   adminKycController.getAllKyc
 );
 
+
 export const adminKycRoutes = router;
+

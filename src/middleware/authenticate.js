@@ -7,6 +7,7 @@ export const authenticate = async (req, res, next) => {
   try {
     let token;
 
+    // Check for token in Authorization header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -19,36 +20,30 @@ export const authenticate = async (req, res, next) => {
     }
 
     try {
-      // Check if token is blacklisted
-      const blacklistedToken = await TokenBlacklist.findOne({ token });
-      if (blacklistedToken) {
-        return res.status(401).json({
-          success: false,
-          error: 'Token has been invalidated'
-        });
-      }
-
+      // Verify token
       const decoded = jwt.verify(token, config.jwtSecret);
-      
-      // Include role in the user object
-      const user = await User.findById(decoded.id);
-      if (!user) {
+
+      // Check if token is blacklisted
+      const isBlacklisted = await TokenBlacklist.findOne({ token });
+      if (isBlacklisted) {
         return res.status(401).json({
           success: false,
-          error: 'User not found'
+          error: 'Token is no longer valid'
         });
       }
 
+      // Set user in request
       req.user = {
-        id: user._id,
-        role: user.role
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role.toLowerCase() // Ensure role is lowercase for consistent comparison
       };
-      req.token = token;
+
       next();
-    } catch (error) {
+    } catch (err) {
       return res.status(401).json({
         success: false,
-        error: 'Not authorized to access this route'
+        error: 'Token is invalid or expired'
       });
     }
   } catch (error) {

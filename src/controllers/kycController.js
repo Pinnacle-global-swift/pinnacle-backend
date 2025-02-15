@@ -22,7 +22,7 @@ export const kycController = {
 
       // Handle file uploads first
       const uploadPromises = [];
-      const requiredFiles = ['idFront', 'idBack', 'selfie', 'proofOfAddress'];
+      const requiredFiles = ['idFront', 'idBack', 'proofOfAddress'];
       const missingFiles = [];
       
       // Check for missing files
@@ -72,6 +72,7 @@ export const kycController = {
       const user = await User.findById(req.user.id);
       if (!user || !user.email) {
         throw new Error('User email not found');
+        
       }
 
       // Send email notification using the template

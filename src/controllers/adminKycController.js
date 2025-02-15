@@ -3,6 +3,7 @@ import { User } from '../models/User.js';
 import { KYC_STATUS } from '../constants/status.js';
 import { emailService } from '../utils/email/emailService.js';
 import { logger } from '../utils/logger.js';
+import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 export const adminKycController = {
 
@@ -242,96 +243,61 @@ export const adminKycController = {
 
   async getAllKyc(req, res, next) {
     try {
-      const { status } = req.query;
-      
-      // Build match condition based on status filter
-      const matchCondition = status ? { status } : {};
+      const { status, page = 1, limit = 10 } = req.query;
+      const query = status ? { status } : {};
 
-      const kycApplications = await KYC.aggregate([
-        {
-          $match: matchCondition
-        },
-        {
-          $lookup: {
-            from: 'pinnacleusers',
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'user'
-          }
-        },
-        {
-          $unwind: '$user'
-        },
-        {
-          $project: {
-            applicantName: '$fullName',
-            'user.fullName': 1,
-            'user.email': 1,
-            'user.phoneNumber': 1,
-            documentType: '$idType',
-            documentNumber: '$idNumber',
-            dateOfBirth: 1,
-            documents: 1,
-            status: 1,
-            submittedAt: '$createdAt',
-            verificationDate: 1,
-            additionalInfo: 1,
-            remarks: 1
-          }
-        },
-        {
-          $sort: { submittedAt: -1 }
-        }
-      ]);
+      const kycs = await KYC.find(query)
+        .populate('userId', 'email fullName')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
 
-      const stats = {
-        total: kycApplications.length,
-        approved: kycApplications.filter(app => app.status === 'approved').length,
-        rejected: kycApplications.filter(app => app.status === 'rejected').length,
-        processing: kycApplications.filter(app => app.status === 'processing').length,
-        withPassport: kycApplications.filter(app => app.documentType === 'passport').length,
-        withNationalId: kycApplications.filter(app => app.documentType === 'national_id').length,
-        withDriversLicense: kycApplications.filter(app => app.documentType === 'drivers_license').length,
-        documentsSubmitted: kycApplications.filter(app => 
-          app.documents?.idFront && 
-          app.documents?.idBack && 
-          app.documents?.selfie && 
-          app.documents?.proofOfAddress
-        ).length
-      };
-
-      const formattedApplications = kycApplications.map(app => ({
-        _id: app._id,
-        applicantDetails: {
-          name: app.applicantName,
-          email: app.user.email,
-          phoneNumber: app.user.phoneNumber,
-          dateOfBirth: app.dateOfBirth
-        },
-        documentInfo: {
-          type: app.documentType,
-          number: app.documentNumber,
-          documents: {
-            idFront: app.documents?.idFront ? true : false,
-            idBack: app.documents?.idBack ? true : false,
-            selfie: app.documents?.selfie ? true : false,
-            proofOfAddress: app.documents?.proofOfAddress ? true : false
-          }
-        },
-        status: app.status,
-        submittedAt: app.submittedAt,
-        verificationDate: app.verificationDate || null,
-        remarks: app.remarks || null,
-        additionalInfo: app.additionalInfo || null
-      }));
+      const total = await KYC.countDocuments(query);
 
       res.status(200).json({
         success: true,
         data: {
-          applications: formattedApplications,
-          statistics: stats,
-          totalCount: kycApplications.length
+          kycs,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(total / limit),
+            total
+          }
         }
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async processKyc(req, res, next) {
+    try {
+      const { kycId, status, remarks } = req.body;
+
+      const kyc = await KYC.findById(kycId).populate('userId', 'email');
+      if (!kyc) {
+        return res.status(404).json({
+          success: false,
+          error: 'KYC application not found'
+        });
+      }
+
+      kyc.status = status;
+      if (remarks) {
+        kyc.remarks = remarks;
+      }
+
+      await kyc.save();
+
+      // Send email notification
+      if (kyc.userId?.email) {
+        const emailTemplate = EmailTemplates.kycStatus(status, remarks);
+        await emailService.sendEmail(kyc.userId.email, emailTemplate);
+      }
+
+      res.status(200).json({
+        success: true,
+        data: kyc
       });
     } catch (error) {
       next(error);

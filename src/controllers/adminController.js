@@ -4,6 +4,8 @@ import { Card } from '../models/Card.js';
 import { Notification } from '../models/Notification.js';
 import { transferService } from '../services/transferService.js';
 import {adminTransferService } from '../services/adminTransferService.js'
+import { Transaction } from '../models/Transaction.js';
+import { KYC } from '../models/KYC.js';
 
 export const adminController = {
 
@@ -93,36 +95,27 @@ export const adminController = {
     }
   },
 
-
-  // Previous methods remain unchanged...
   getDashboardStats: async (req, res, next) => {
     try {
-      const totalUsers = await User.countDocuments();
-      const totalIncome = await Account.aggregate([
-        { $group: { _id: null, total: { $sum: "$balance" } } }
-      ]);
-      const totalTransfers = await Account.countDocuments();
-      const totalTransactions = await Account.countDocuments();
-
-      const userGrowth = await User.aggregate([
-        {
-          $group: {
-            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { "_id": 1 } },
-        { $limit: 5 }
+      const [
+        totalUsers,
+        pendingKYC,
+        pendingCards,
+        pendingTransactions
+      ] = await Promise.all([
+        User.countDocuments(),
+        KYC.countDocuments({ status: 'processing' }),
+        Card.countDocuments({ status: 'pending' }),
+        Transaction.countDocuments({ status: 'pending' })
       ]);
 
       res.status(200).json({
         success: true,
         data: {
           totalUsers,
-          totalIncome: totalIncome[0]?.total || 0,
-          totalTransfers,
-          totalTransactions,
-          userGrowth
+          pendingKYC,
+          pendingCards,
+          pendingTransactions
         }
       });
     } catch (error) {
