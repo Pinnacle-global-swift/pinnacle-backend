@@ -18,10 +18,10 @@ import { notificationRoutes } from './routes/notificationRoutes.js';
 import { publicRoutes } from './routes/publicRoutes.js';
 import { logger } from './utils/logger.js';
 import { kycRoutes } from './routes/kycRoutes.js';
-// import { adminCardRoutes } from './routes/adminCardRoutes.js';
+import { adminCardRoutes } from './routes/adminCardRoutes.js';
 import { withdrawalRoutes } from './routes/withdrawalRoutes.js';
 import { transactionRoutes } from './routes/transactionRoutes.js';
-// import { adminKycRoutes } from './routes/adminKycRoutes.js';
+import { adminKycRoutes } from './routes/adminKycRoutes.js';
 import { transferRoutes } from './routes/transferRoutes.js';
 // import { adminDashboardRoutes } from './routes/adminDashboardRoutes.js';
 // import { adminUserRoutes } from './routes/adminUserRoutes.js';
@@ -66,6 +66,7 @@ app.use('/api/transfer', transferRoutes);
 
 // Admin routes - Keep only the main admin route
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/kyc', adminKycRoutes);
 
 // Error handling middleware (order matters)
 app.use(databaseErrorHandler);  // Handle database errors first

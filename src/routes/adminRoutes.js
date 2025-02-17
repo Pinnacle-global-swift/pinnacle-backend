@@ -3,6 +3,8 @@ import { adminController } from '../controllers/adminController.js';
 import { adminKycController } from '../controllers/adminKycController.js';
 import { adminCardController } from '../controllers/adminCardController.js';
 import { adminTransactionController } from '../controllers/adminTransactionController.js';
+import { adminDashboardController } from '../controllers/adminDashboardController.js';
+import { adminUserRoutes } from './adminUserRoutes.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { validate } from '../middleware/validate.js';
@@ -14,7 +16,7 @@ const router = express.Router();
  * @swagger
  * /api/admin/transfer:
  *   post:
- *     summary: Admin transfer money to user account
+ *     summary: Admin transfer money to user account by account number
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -25,25 +27,28 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - userId
+ *               - accountNumber
  *               - amount
  *             properties:
- *               userId:
+ *               accountNumber:
  *                 type: string
- *                 description: User's ID
+ *                 description: User's account number
+ *                 example: "1234567890"
  *               amount:
  *                 type: number
  *                 description: Amount to transfer
+ *                 example: 500
  *               description:
  *                 type: string
  *                 description: Transfer description
+ *                 example: "Admin funds adjustment"
  *     responses:
  *       200:
  *         description: Transfer successful
  *       400:
  *         description: Invalid input
  *       404:
- *         description: User not found
+ *         description: Account not found
  */
 const transferValidation = [
   body('accountNumber').notEmpty().withMessage('accountNumber is required'),
@@ -56,21 +61,72 @@ const transferValidation = [
 // Protect all admin routes
 router.use(authenticate, authorize('admin'));
 
-// Admin Dashboard
-router.get('/dashboard/stats', adminController.getDashboardStats);
+/**
+ * @swagger
+ * /api/admin/dashboard/stats:
+ *   get:
+ *     summary: Get admin dashboard statistics
+ *     description: Retrieve key metrics for the admin dashboard including user counts, transactions, and KYC status
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers:
+ *                       type: number
+ *                       example: 10000
+ *                     activeUsers:
+ *                       type: number
+ *                       example: 7500
+ *                     totalTransactions:
+ *                       type: number
+ *                       example: 50000
+ *                     pendingKYC:
+ *                       type: number
+ *                       example: 250
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized to access this route
+ */
+router.get(
+  '/dashboard/stats',
+  authenticate,
+  authorize('admin'),
+  adminDashboardController.getDashboardStats
+);
 
 // Admin KYC Routes
-router.get('/kyc', adminKycController.getAllKyc);
-
 router.post(
-  '/kyc/process',
+  '/kyc/approve',
+  authenticate,
+  authorize('admin'),
   [
     body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
-    body('status').isIn(['approved', 'rejected']).withMessage('Invalid status'),
-    body('remarks').optional().trim()
+    body('status').isIn(['approved', 'rejected']).withMessage('Valid status required'),
+    body('remarks').optional().trim().isLength({ max: 500 })
   ],
   validate,
-  adminKycController.processKyc
+  adminKycController.approveKyc
+);
+
+router.get(
+  '/kyc',
+  authenticate,
+  authorize('admin'),
+  adminKycController.getAllKyc
 );
 
 // Admin Card Routes
@@ -114,5 +170,18 @@ router.post(
   validate,
   adminTransactionController.processTransaction
 );
+
+// Admin Transfer Route
+router.post(
+  '/transfer',
+  authenticate,
+  authorize('admin'),
+  transferValidation,
+  validate,
+  adminController.adminTransferByAccount
+);
+
+// Admin User Routes
+router.use('/users', adminUserRoutes);
 
 export const adminRoutes = router;

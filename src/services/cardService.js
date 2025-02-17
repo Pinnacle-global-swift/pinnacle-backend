@@ -47,21 +47,30 @@ const CARD_CONFIGS = {
 
 export const cardService = {
   async applyForCard(userId, type, receiptUrl) {
+    // Check for existing card applications
     const existingCard = await Card.findOne({ 
       userId,
-      status: { $nin: [CARD_STATUS.REJECTED] }
+      status: { $nin: [CARD_STATUS.REJECTED] } // Exclude rejected cards
     });
     
-    if (existingCard) {
-      throw new ValidationError('Card application already exists');
+    // If there's an existing card application that was rejected, allow reapplication
+    if (existingCard && existingCard.status === CARD_STATUS.REJECTED) {
+      existingCard.status = CARD_STATUS.PENDING; // Reset status to pending
+      existingCard.receiptUrl = receiptUrl; // Update receipt URL if necessary
+      await existingCard.save();
+      return existingCard; // Return the updated card application
     }
 
-    // Generate card details
-    const cardDetails = generateCardDetails();
+    // Validate new card type
+    if (!CARD_CONFIGS[type]) {
+      throw new ValidationError('Invalid card type. Must be virtual, physical, or premium');
+    }
+
     const config = CARD_CONFIGS[type];
+    const cardDetails = generateCardDetails();
 
     // Create new card with all required fields
-    const card = await Card.create({
+    return await Card.create({
       userId,
       type,
       status: CARD_STATUS.PENDING,
@@ -70,15 +79,10 @@ export const cardService = {
       cvv: cardDetails.cvv,
       expiryMonth: cardDetails.expiryMonth,
       expiryYear: cardDetails.expiryYear,
-      limit: config.limit,
+      limit: config.limit, // Set the limit based on card type
       paymentAmount: config.paymentAmount,
       paymentReceipt: receiptUrl
     });
-
-    // Schedule rejection for the card application
-    this.scheduleCardRejection(card);
-
-    return card;
   },
 
   async reapplyCard(userId, type, receiptUrl) {

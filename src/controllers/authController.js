@@ -160,7 +160,7 @@ export const authController = {
       await emailNotificationService.sendLoginAlert(user, deviceInfo);
 
       // Generate token with user object (includes role)
-      const token = generateToken(user);
+      const token = generateToken(user, user.role);
       
       // Decode token to get expiration time
       const decoded = jwt.decode(token);

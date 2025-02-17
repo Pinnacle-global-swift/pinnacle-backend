@@ -302,5 +302,100 @@ export const adminKycController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  async rejectKyc(req, res, next) {
+    try {
+      const { kycId, remarks } = req.body;
+
+      // Default professional remark if none provided
+      const defaultRemark = `We regret to inform you that your KYC application could not be approved at this time. 
+      Please ensure all submitted documents are:
+      - Clear and legible
+      - Not expired
+      - Properly aligned and complete
+      - Match the information provided in your application
+      
+      You may resubmit your application with updated documentation at any time.`;
+
+      // Populate the userId field to get user details
+      const kyc = await KYC.findById(kycId).populate('userId', 'email fullName');
+      if (!kyc) {
+        return res.status(404).json({
+          success: false,
+          error: 'KYC application not found'
+        });
+      }
+
+      if (!kyc.userId || !kyc.userId.email) {
+        return res.status(400).json({
+          success: false,
+          error: 'User information not found'
+        });
+      }
+
+      // Update KYC status to rejected
+      kyc.status = 'rejected';
+      kyc.remarks = remarks || defaultRemark; // Use provided remarks or default
+      await kyc.save();
+
+      // Send email notification to the user
+      try {
+        await emailService.sendEmail(
+          kyc.userId.email,
+          {
+            subject: 'KYC Application Status Update - Action Required',
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <style>
+                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                  .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+                  .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+                  .content { padding: 20px; }
+                  .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+                  .remarks { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #dc3545; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h2>KYC Application Status Update</h2>
+                  </div>
+                  <div class="content">
+                    <p>Dear ${kyc.userId.fullName},</p>
+                    <p>We have reviewed your KYC (Know Your Customer) application and found that some additional information or corrections are needed.</p>
+                    <div class="remarks">
+                      <p><strong>Reason for Rejection:</strong></p>
+                      <p>${kyc.remarks}</p>
+                    </div>
+                    <p>Please log in to your account to review the requirements and submit updated documentation. If you need assistance, our support team is available to help.</p>
+                    <p>Best regards,<br>The Pinnacle Global Swift Team</p>
+                  </div>
+                  <div class="footer">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p>© ${new Date().getFullYear()} Pinnacle Global Swift. All rights reserved.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `
+          }
+        );
+      } catch (emailError) {
+        logger.error('Failed to send KYC rejection email:', emailError);
+        // Continue with the response even if email fails
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'KYC application rejected successfully',
+        data: kyc
+      });
+    } catch (error) {
+      logger.error('Error rejecting KYC:', error);
+      next(error);
+    }
   }
 };

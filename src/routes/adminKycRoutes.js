@@ -58,6 +58,47 @@ router.post(
 
 /**
  * @swagger
+ * /api/admin/kyc/reject:
+ *   post:
+ *     summary: Reject a KYC application and notify the user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - kycId
+ *             properties:
+ *               kycId:
+ *                 type: string
+ *               remarks:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: KYC application rejected successfully
+ *       400:
+ *         description: Invalid request or KYC not found
+ *       404:
+ *         description: KYC application not found
+ */
+router.post(
+  '/reject',
+  authenticate,
+  authorize('admin'),
+  [
+    body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
+    body('remarks').optional().trim()
+  ],
+  validate,
+  adminKycController.rejectKyc
+);
+
+/**
+ * @swagger
  * /api/admin/kyc:
  *   get:
  *     summary: Get all KYC applications with optional status filter

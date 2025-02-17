@@ -300,8 +300,19 @@ export const EmailTemplates = {
 </body>
 </html>
     `
+    }),
+
+    kycRejection: (email, remarks) => ({
+        subject: 'KYC Application Rejected',
+        html: `
+          <h1>KYC Application Status</h1>
+          <p>Dear User,</p>
+          <p>We regret to inform you that your KYC application has been rejected.</p>
+          <p><strong>Remarks:</strong> ${remarks}</p>
+          <p>If you believe this decision is incorrect, please contact our support team for further assistance.</p>
+          <p>Thank you for your understanding.</p>
+          <p>Best regards,<br>Your Company Name</p>
+        `
     })
-
-
 
 };
