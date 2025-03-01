@@ -29,6 +29,7 @@ const router = express.Router();
  *             required:
  *               - accountNumber
  *               - amount
+ *               - senderName
  *             properties:
  *               accountNumber:
  *                 type: string
@@ -38,6 +39,10 @@ const router = express.Router();
  *                 type: number
  *                 description: Amount to transfer
  *                 example: 500
+ *               senderName:
+ *                 type: string
+ *                 description: Name of the sender
+ *                 example: "Admin"
  *               description:
  *                 type: string
  *                 description: Transfer description
@@ -55,7 +60,16 @@ const transferValidation = [
   body('amount')
     .isFloat({ min: 0.01 })
     .withMessage('Amount must be greater than 0'),
-  body('description').optional().isString()
+  body('senderName')
+    .notEmpty()
+    .withMessage('Sender name is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Sender name must be between 2 and 100 characters'),
+  body('description')
+    .optional()
+    .isString()
+    .isLength({ max: 200 })
+    .withMessage('Description must not exceed 200 characters')
 ];
 
 // Protect all admin routes

@@ -51,37 +51,39 @@ export const adminController = {
 
   adminTransferByAccount: async (req, res, next) => {
     try {
-      const { accountNumber, amount, description } = req.body;
-      console.log(accountNumber, amount, description)
-  
-      if (!accountNumber || !amount) {
+      const { accountNumber, amount, description, senderName } = req.body;
+
+      if (!accountNumber || !amount || !senderName) {
         return res.status(400).json({
           success: false,
-          error: 'Account number and amount are required'
+          error: 'Account number, amount, and sender name are required'
         });
       }
-  
+
       if (amount <= 0) {
         return res.status(400).json({
           success: false,
           error: 'Amount must be greater than 0'
         });
       }
-  
+
       const result = await adminTransferService.transferByAccountNumber(
         accountNumber,
         amount,
-        description
+        description,
+        senderName
       );
-  
+
       res.status(200).json({
         success: true,
         data: {
           message: 'Transfer successful',
           recipientName: result.recipientName,
+          senderName: result.senderName,
           accountNumber: result.accountNumber,
           amount: result.amount,
-          newBalance: result.newBalance
+          newBalance: result.newBalance,
+          transactionId: result.transactionId
         }
       });
     } catch (error) {

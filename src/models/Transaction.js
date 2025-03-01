@@ -33,10 +33,38 @@ const transactionSchema = new mongoose.Schema({
   },
   description: String,
   balanceAfter: Number,
+  transactionFee: {
+    type: Number,
+    default: 0
+  },
+  exchangeRate: {
+    type: Number,
+    default: 1
+  },
+  remarks: String,
   metadata: {
     withdrawalMethod: String,
     accountNumber: String,
-    swiftCode: String
+    swiftCode: String,
+    transferType: {
+      type: String,
+      enum: ['admin_transfer', 'user_transfer', 'system'],
+      required: true
+    },
+    initiatedBy: {
+      type: String,
+      required: true
+    },
+    senderName: {
+      type: String,
+      required: function() {
+        return this.metadata.transferType === 'admin_transfer';
+      }
+    },
+    recipientName: String,
+    bankName: String,
+    depositMethod: String,
+    depositedBy: String
   }
 }, {
   timestamps: true

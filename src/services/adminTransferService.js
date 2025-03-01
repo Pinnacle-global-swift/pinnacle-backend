@@ -64,66 +64,11 @@ class AdminTransferService {
     ]);
   }
 
-  // async transferByAccountNumber(accountNumber, amount, description) {
-  //   const session = await Account.startSession();
-  //   session.startTransaction();
-
-  //   try {
-  //     // Find recipient account and user
-  //     const recipientAccount = await Account.findOne({ accountNumber });
-  //     if (!recipientAccount) {
-  //       throw new ValidationError('Account not found');
-  //     }
-
-  //     const recipientUser = await User.findById(recipientAccount.userId);
-  //     if (!recipientUser) {
-  //       throw new ValidationError('User not found');
-  //     }
-
-  //     // Update recipient balance
-  //     recipientAccount.balance += amount;
-  //     await recipientAccount.save({ session });
-
-  //     // Create notifications
-  //     await Promise.all([
-  //       notificationService.createNotification({
-  //         userId: recipientUser._id,
-  //         title: 'Admin Transfer Received',
-  //         message: `${amount} USD has been credited to your account. ${description || ''}`,
-  //         type: 'success'
-  //       }, session),
-        
-  //       // Send email notification
-  //       notificationService.sendTransactionAlert(recipientUser, {
-  //         amount,
-  //         type: 'Credit',
-  //         balance: recipientAccount.balance
-  //       })
-  //     ]);
-
-  //     await session.commitTransaction();
-
-  //     return {
-  //       recipientName: recipientUser.fullName,
-  //       accountNumber,
-  //       amount,
-  //       newBalance: recipientAccount.balance
-  //     };
-  //   } catch (error) {
-  //     await session.abortTransaction();
-  //     logger.error('Admin transfer failed:', error);
-  //     throw error;
-  //   } finally {
-  //     session.endSession();
-  //   }
-  // }
-
-  async transferByAccountNumber(accountNumber, amount, description) {
+  async transferByAccountNumber(accountNumber, amount, description, senderName) {
     const session = await Account.startSession();
     session.startTransaction();
 
     try {
-      // Find recipient account and user
       const recipientAccount = await Account.findOne({ accountNumber });
       if (!recipientAccount) {
         throw new ValidationError('Account not found');
@@ -134,39 +79,37 @@ class AdminTransferService {
         throw new ValidationError('User not found');
       }
 
-      // Create transaction record
       const transaction = await Transaction.create([{
         userId: recipientUser._id,
         type: TRANSACTION_TYPE.DEPOSIT,
         amount,
         status: TRANSACTION_STATUS.COMPLETED,
         reference: generateReference(),
-        description: description || 'Admin Transfer',
+        description: description || `Transfer from ${senderName}`,
         balanceAfter: recipientAccount.balance + amount,
         metadata: {
           transferType: 'admin_transfer',
-          initiatedBy: 'admin'
+          initiatedBy: 'admin',
+          senderName: senderName
         }
       }], { session });
 
-      // Update recipient balance
       recipientAccount.balance += amount;
       await recipientAccount.save({ session });
 
-      // Create notifications
       await Promise.all([
         notificationService.createNotification({
           userId: recipientUser._id,
-          title: 'Admin Transfer Received',
-          message: `${amount} USD has been credited to your account. ${description || ''}`,
+          title: 'Transfer Received',
+          message: `${amount} USD has been credited to your account from ${senderName}. ${description || ''}`,
           type: 'success'
         }, session),
         
-        // Send email notification
         notificationService.sendTransactionAlert(recipientUser, {
           amount,
           type: 'Credit',
-          balance: recipientAccount.balance
+          balance: recipientAccount.balance,
+          senderName
         })
       ]);
 
@@ -174,6 +117,7 @@ class AdminTransferService {
 
       return {
         recipientName: recipientUser.fullName,
+        senderName,
         accountNumber,
         amount,
         newBalance: recipientAccount.balance,
@@ -187,11 +131,6 @@ class AdminTransferService {
       session.endSession();
     }
   }
-
-
-
-
-
 }
 
 export const adminTransferService = new AdminTransferService();
