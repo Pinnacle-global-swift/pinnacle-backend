@@ -64,6 +64,7 @@ app.use('/api/kyc', kycRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/transfer', transferRoutes);
 
+
 // Admin routes - Keep only the main admin route
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/kyc', adminKycRoutes);
