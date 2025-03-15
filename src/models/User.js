@@ -52,6 +52,15 @@ const userSchema = new mongoose.Schema({
     unique: true,
     required: true
   },
+  kycVerified: {
+    type: Boolean,
+    default: false
+  },
+  kycStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'none'],
+    default: 'none'
+  },
   resetPasswordOTP: String,
   resetPasswordOTPExpiry: Date,
   otp: String,

@@ -76,7 +76,7 @@ const cardSchema = new mongoose.Schema({
 });
 
 // Middleware to format card number before saving
-cardSchema.pre('save', function(next) {
+cardSchema.pre('save', function (next) {
   if (this.isModified('cardNumber')) {
     this.maskedCardNumber = `****-****-****-${this.cardNumber.slice(-4)}`;
   }

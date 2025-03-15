@@ -41,10 +41,10 @@ const router = express.Router();
  *       404:
  *         description: KYC application not found
  */
+router.use(authenticate, authorize('admin'));
+
 router.post(
   '/approve',
-  authenticate,
-  authorize('admin'),
   [
     body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
     body('status')
@@ -87,8 +87,6 @@ router.post(
  */
 router.post(
   '/reject',
-  authenticate,
-  authorize('admin'),
   [
     body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
     body('remarks').optional().trim()
@@ -118,11 +116,8 @@ router.post(
  */
 router.get(
   '/',
-  authenticate,
-  authorize('admin'),
   adminKycController.getAllKyc
 );
-
 
 export const adminKycRoutes = router;
 

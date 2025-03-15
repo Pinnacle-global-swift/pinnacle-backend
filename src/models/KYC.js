@@ -37,7 +37,12 @@ const kycSchema = new mongoose.Schema({
     idBack: String,
     selfie: String,
     proofOfAddress: String
-  }
+  },
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PinnacleUser',
+  },
+  processedAt: Date
 }, {
   timestamps: true
 });

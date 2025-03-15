@@ -8,6 +8,25 @@ export const withdrawalController = {
     try {
       const { amount, withdrawalMethod, accountNumber, swiftCode } = req.body;
 
+      // Check prerequisites first
+      try {
+        await withdrawalService.checkPrerequisites(req.user.id);
+      } catch (error) {
+        return res.status(error.statusCode || 403).json({
+          success: false,
+          error: {
+            message: error.message,
+            code: error.statusCode || 403,
+            details: {
+              requiresKYC: error.message.includes('KYC'),
+              requiresCard: error.message.includes('card'),
+              cardStatus: error.message.includes('card') ? 'required' : undefined
+            }
+          }
+        });
+      }
+
+      // Process withdrawal
       const transaction = await withdrawalService.processWithdrawal(
         req.user.id,
         {

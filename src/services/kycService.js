@@ -1,4 +1,5 @@
 import { KYC } from '../models/KYC.js';
+import { User } from '../models/User.js';
 import { emailService } from '../utils/email/emailService.js';
 import { ValidationError } from '../utils/errors.js';
 
@@ -26,16 +27,57 @@ export const kycService = {
     });
   },
 
-  async getKYCStatus(userId) {
-    const kyc = await KYC.findOne({ userId });
+  async approveKYC(kycId, status, remarks, adminId) {
+    const kyc = await KYC.findById(kycId);
     if (!kyc) {
-      throw new Error('KYC verification not found');
+      throw new ValidationError('KYC not found');
+    }
+
+    // Record who approved/rejected the KYC
+    kyc.status = status;
+    kyc.remarks = remarks;
+    kyc.verificationDate = new Date();
+    kyc.processedBy = adminId;
+    await kyc.save();
+
+    // Update user KYC status
+    await User.findByIdAndUpdate(kyc.userId, {
+      kycVerified: status === 'approved',
+      kycStatus: status
+    });
+
+    return kyc;
+  },
+
+  async getKYCStatus(userId) {
+    const kyc = await KYC.findOne({ userId }).sort('-createdAt');
+
+    if (!kyc) {
+      return {
+        status: 'none',
+        message: 'KYC not submitted yet. Please submit your KYC verification.'
+      };
     }
 
     return {
       status: kyc.status,
       submittedAt: kyc.createdAt,
-      verificationDate: kyc.verificationDate
+      verificationDate: kyc.verificationDate,
+      remarks: kyc.remarks,
+      message: this.getKYCStatusMessage(kyc.status)
     };
+  },
+
+  getKYCStatusMessage(status) {
+    switch (status) {
+      case 'processing':
+        return 'Your KYC is under review. This usually takes 24-48 hours.';
+      case 'approved':
+        return 'Your KYC has been approved. You can now perform all transactions.';
+      case 'rejected':
+        return 'Your KYC was rejected. Please submit updated documents.';
+      default:
+        return 'Please submit your KYC verification.';
+    }
   }
 };

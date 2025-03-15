@@ -11,6 +11,7 @@ export const generateAccountNumber = () => {
   return `${BANK_PREFIX}${remainingDigits}`;
 };
 
+
 export const isValidAccountNumber = (accountNumber) => {
   if (!accountNumber) return false;
   
