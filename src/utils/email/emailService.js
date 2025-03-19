@@ -3,12 +3,12 @@ import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
 const transporter = nodemailer.createTransport({
-  host: config.emailHost,
-  port: config.emailPort,
+  host: "mail.privateemail.com",
+  port: 465,
   secure: true,
   auth: {
-    user: config.emailUser,
-    pass: config.emailPassword
+    user: "support@pinnacleglobalswift.site",
+    pass: "support@pinnacleglobalswift.site"
   }
 });
 
@@ -16,7 +16,7 @@ export const emailService = {
   async sendEmail(to, template) {
     try {
       const mailOptions = {
-        from: config.emailFrom,
+        from: "support@pinnacleglobalswift.site",
         to,
         subject: template.subject,
         html: template.html
