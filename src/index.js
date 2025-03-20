@@ -82,10 +82,10 @@ const startServer = async () => {
   try {
     // Connect to database first
     await connectDB();
-    
+
     // Wait for connection to be ready
     await waitForConnection();
-    
+
     // Start server only after successful database connection
     app.listen(config.port, () => {
       logger.info(`Server is running on port ${config.port}`);

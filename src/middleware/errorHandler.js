@@ -1,7 +1,18 @@
 import { logger } from '../utils/logger.js';
 
 export const errorHandler = (err, req, res, next) => {
-  logger.error(err);
+  logger.error('Error:', err);
+
+  // Handle email errors
+  if (err.code === 'ECONNREFUSED' || err.code === 'ESOCKET') {
+    return res.status(500).json({
+      success: false,
+      error: {
+        message: 'Email service temporarily unavailable',
+        code: 500
+      }
+    });
+  }
 
   // MongoDB connection errors
   if (err.name === 'MongoNetworkError') {

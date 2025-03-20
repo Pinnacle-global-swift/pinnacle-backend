@@ -3,13 +3,14 @@ import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
 const transporter = nodemailer.createTransport({
-  host: config.emailHost,
-  port: config.emailPort,
-  secure: true,
+  host: 'mail.privateemail.com',
+  port: 465,
+  secure: true, // use SSL
   auth: {
     user: config.emailUser,
     pass: config.emailPassword
-  }
+  },
+  debug: true // Enable debug logs
 });
 
 export const emailService = {

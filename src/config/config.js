@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 
-
 dotenv.config();
 
 export const config = {
@@ -15,10 +14,14 @@ export const config = {
     region: process.env.AWS_REGION,
     bucketName: process.env.AWS_S3_BUCKET
   },
+
+  // Email configuration
   emailHost: process.env.EMAIL_HOST,
-  emailPort: process.env.EMAIL_PORT,
+  emailPort: parseInt(process.env.EMAIL_PORT),
   emailUser: process.env.EMAIL_USER,
   emailPassword: process.env.EMAIL_PASSWORD,
-  emailFrom: process.env.EMAIL_FROM
+  emailFrom: process.env.EMAIL_FROM,
+
+  emailService: process.env.EMAIL_SERVICE || 'gmail',
 
 };
