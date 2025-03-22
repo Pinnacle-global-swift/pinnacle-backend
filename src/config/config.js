@@ -16,12 +16,11 @@ export const config = {
   },
 
   // Email configuration
-  emailHost: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
-  emailPort: parseInt(process.env.EMAIL_PORT) || 2525,
+  emailService: process.env.EMAIL_SERVICE,
+  emailHost: process.env.EMAIL_HOST,
+  emailPort: parseInt(process.env.EMAIL_PORT),
   emailUser: process.env.EMAIL_USER,
   emailPassword: process.env.EMAIL_PASSWORD,
   emailFrom: process.env.EMAIL_FROM,
-
-  emailService: process.env.EMAIL_SERVICE || 'gmail',
 
 };

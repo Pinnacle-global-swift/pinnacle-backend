@@ -3,15 +3,23 @@ import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
 const transporter = nodemailer.createTransport({
-  host: config.emailHost,
-  port: config.emailPort,
-  secure: false, // Set to false for Mailtrap
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: config.emailUser,
     pass: config.emailPassword
   },
+  tls: {
+    rejectUnauthorized: false
+  },
   debug: true,
-  logger: true // Enable detailed logging
+  // Add custom headers for sender identity
+  headers: {
+    'X-Sender-Name': 'Pinnacle Global Swift',
+    'X-Sender-Email': 'support@pinnacleglobalswift.com'
+  }
 });
 
 export const emailService = {
@@ -20,43 +28,30 @@ export const emailService = {
       const mailOptions = {
         from: {
           name: 'Pinnacle Global Swift',
-          address: config.emailFrom
+          address: 'support@pinnacleglobalswift.com'
         },
+        replyTo: 'support@pinnacleglobalswift.com',
         to,
         subject: template.subject,
-        html: template.html,
-        headers: {
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High',
-          'Importance': 'high'
-        }
+        html: template.html
       };
 
       const info = await transporter.sendMail(mailOptions);
-      logger.info('Email details:', {
-        messageId: info.messageId,
-        recipient: to,
-        subject: template.subject,
-        preview: info.preview // Mailtrap preview URL
-      });
+      logger.info('Email sent:', info.messageId);
       return info;
     } catch (error) {
-      logger.error('Email sending error:', {
-        error: error.message,
-        stack: error.stack,
-        recipient: to
-      });
+      logger.error('Error sending email:', error);
       throw error;
     }
   },
 
   async verifyConnection() {
     try {
-      const result = await transporter.verify();
-      logger.info('Email service verification result:', result);
-      return result;
+      await transporter.verify();
+      logger.info('Email service connection verified');
+      return true;
     } catch (error) {
-      logger.error('Email service verification failed:', error);
+      logger.error('Email service connection failed:', error);
       return false;
     }
   }
