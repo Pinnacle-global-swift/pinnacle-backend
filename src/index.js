@@ -36,6 +36,7 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
+
 // Add database connection check middleware
 app.use(async (req, res, next) => {
   try {
