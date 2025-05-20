@@ -15,8 +15,7 @@ export const config = {
     bucketName: process.env.AWS_S3_BUCKET
   },
 
-  // Email configuration
-  emailService: process.env.EMAIL_SERVICE,
+  // Email configuration for Zoho
   emailHost: process.env.EMAIL_HOST,
   emailPort: parseInt(process.env.EMAIL_PORT),
   emailUser: process.env.EMAIL_USER,

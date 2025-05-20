@@ -27,6 +27,7 @@ import { transferRoutes } from './routes/transferRoutes.js';
 // import { adminUserRoutes } from './routes/adminUserRoutes.js';
 import { databaseErrorHandler } from './middleware/databaseErrorHandler.js';
 
+
 const app = express();
 
 // Middleware
@@ -47,9 +48,6 @@ app.use(async (req, res, next) => {
     next(error);
   }
 });
-
-
-
 
 // Swagger Documentation
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

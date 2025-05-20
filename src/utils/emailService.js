@@ -1,31 +1,59 @@
 import nodemailer from 'nodemailer';
-import { config } from '../config/config.js'; // Ensure config.js handles your environment variables
+import { config } from '../config/config.js';
+import { logger } from './logger.js';
 
 // Create a reusable transporter object
 const transporter = nodemailer.createTransport({
-  host: "mail.privateemail.com", // Use your email host
-  port: 465, // Port for secure SMTP
-  secure: true, // Must be true for port 465
+  host: 'smtp.zoho.com', // Use your email host
+  port: 587, // Port for secure SMTP
+  secure: false, // Must be true for port 465
   auth: {
-    user: process.env.EMAIL_USER, // Use environment variables for security
-    pass: process.env.EMAIL_PASS  // Use environment variables for security
+    user: config.emailUser, // Use environment variables for security
+    pass: config.emailPassword  // Use environment variables for security
   },
-  logger: true, // Enable logging for debugging purposes
-  debug: true, // Enable debug output
+  tls: {
+    rejectUnauthorized: false // Only use this in development if needed
+  },
+  debug: true, // For development only, remove in production
+  // Custom headers for Zoho Mail
+  headers: {
+    'X-Sender-Name': 'Pinnacle Global Swift',
+    'X-Priority': '3'
+  }
 });
 
-export const sendEmail = async (to, subject, text) => {
-  try {
-    const info = await transporter.sendMail({
-      from: `"Support Team" <${process.env.EMAIL_USER}>`, // Set a proper sender name
-      to,
-      subject,
-      text,
-    });
-    console.log('Message sent: %s', info.messageId); // Log message ID
-    return true;
-  } catch (error) {
-    console.error('Email error:', error);
-    return false;
+// Test email connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    logger.error('SMTP server connection error:', error);
+  } else {
+    logger.info('SMTP server connection successful');
+  }
+});
+
+export const emailService = {
+  async sendEmail(to, template) {
+    try {
+      const mailOptions = {
+        from: {
+          name: 'Pinnacle Global Swift',
+          address: config.emailUser
+        },
+        replyTo: config.emailUser,
+        to,
+        subject: template.subject,
+        html: template.html
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      logger.info('Email sent:', info.messageId);
+      return info;
+    } catch (error) {
+      logger.error('Error sending email:', error);
+      throw error;
+    }
   }
 };
+
+// Export the sendEmail function directly for convenience
+export const sendEmail = emailService.sendEmail.bind(emailService);

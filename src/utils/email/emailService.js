@@ -3,22 +3,27 @@ import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: true,
+  host: config.emailHost,
+  port: config.emailPort,
+  secure: false, // Important: set to false for port 587
   auth: {
     user: config.emailUser,
     pass: config.emailPassword
   },
   tls: {
-    rejectUnauthorized: false
+    // Required for some hosts
+    rejectUnauthorized: false,
+    ciphers: 'SSLv3'
   },
-  debug: true,
-  // Add custom headers for sender identity
-  headers: {
-    'X-Sender-Name': 'Pinnacle Global Swift',
-    'X-Sender-Email': 'support@pinnacleglobalswift.com'
+  debug: true // Enable debug logs
+});
+
+// Test connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    logger.error('SMTP connection error:', error);
+  } else {
+    logger.info('SMTP server is ready to take messages');
   }
 });
 
@@ -26,33 +31,23 @@ export const emailService = {
   async sendEmail(to, template) {
     try {
       const mailOptions = {
-        from: {
-          name: 'Pinnacle Global Swift',
-          address: 'support@pinnacleglobalswift.com'
-        },
-        replyTo: 'support@pinnacleglobalswift.com',
+        from: config.emailFrom,
         to,
         subject: template.subject,
-        html: template.html
+        html: template.html,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'high'
+        }
       };
 
       const info = await transporter.sendMail(mailOptions);
-      logger.info('Email sent:', info.messageId);
+      logger.info('Email sent successfully:', info.messageId);
       return info;
     } catch (error) {
-      logger.error('Error sending email:', error);
+      logger.error('Failed to send email:', error);
       throw error;
-    }
-  },
-
-  async verifyConnection() {
-    try {
-      await transporter.verify();
-      logger.info('Email service connection verified');
-      return true;
-    } catch (error) {
-      logger.error('Email service connection failed:', error);
-      return false;
     }
   }
 };
