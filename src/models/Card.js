@@ -69,7 +69,7 @@ const cardSchema = new mongoose.Schema({
     type: Date
   },
   paymentReceipt: {
-    type: String, // This will store the S3 URL of the receipt image
+    type: String, // This will store the Cloudinary URL of the receipt image
   }
 }, {
   timestamps: true

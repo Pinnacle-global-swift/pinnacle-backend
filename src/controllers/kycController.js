@@ -1,7 +1,7 @@
 import { kycService } from '../services/kycService.js';
 import { emailService } from '../utils/email/emailService.js';
 import { EmailTemplates } from "../utils/email/emailTemplates.js"
-import { uploadToS3 } from '../utils/s3Upload.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 import { User } from '../models/User.js';
 
 
@@ -44,7 +44,7 @@ export const kycController = {
       for (const [key, files] of Object.entries(req.files)) {
         if (files && files[0]) {
           uploadPromises.push(
-            uploadToS3(files[0], `kyc/${key}`)
+            uploadToCloudinary(files[0], `kyc/${key}`)
               .then(url => ({ [key]: url }))
               .catch(error => {
                 console.error(`Error uploading ${key}:`, error);

@@ -1,7 +1,7 @@
 import { cardService } from '../services/cardService.js';
 import { emailService } from '../utils/email/emailService.js';
 import { CARD_STATUS } from '../constants/status.js';
-import { uploadToS3 } from '../utils/s3Upload.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 import { User } from '../models/User.js';
 import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
@@ -26,10 +26,10 @@ export const cardController = {
         });
       }
 
-      // Upload receipt to S3
+      // Upload receipt to Cloudinary
       let receiptUrl;
       try {
-        receiptUrl = await uploadToS3(
+        receiptUrl = await uploadToCloudinary(
           req.files.paymentReceipt[0], 
           'card-receipts'
         );
