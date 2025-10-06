@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: config.emailHost,
   port: config.emailPort,
   secure: false, // Important: set to false for port 587
