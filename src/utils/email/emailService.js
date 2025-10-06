@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   host: config.emailHost,
   port: config.emailPort,
   secure: false, // Important: set to false for port 587
@@ -15,7 +15,10 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false,
     ciphers: 'SSLv3'
   },
-  debug: true // Enable debug logs
+  connectionTimeout: 10000, // 10 seconds timeout
+  greetingTimeout: 5000,    // 5 seconds greeting timeout
+  socketTimeout: 10000,     // 10 seconds socket timeout
+  debug: process.env.NODE_ENV !== 'production' // Only debug in development
 });
 
 // Test connection on startup

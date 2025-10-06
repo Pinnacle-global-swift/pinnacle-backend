@@ -49,6 +49,25 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Pinnacle Backend API is running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Swagger Documentation
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 

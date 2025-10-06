@@ -156,8 +156,10 @@ export const authController = {
       // Get device info
       const deviceInfo = getDeviceInfo(req);
 
-      // Send login alert
-      await emailNotificationService.sendLoginAlert(user, deviceInfo);
+      // Send login alert (non-blocking - don't fail login if email fails)
+      emailNotificationService.sendLoginAlert(user, deviceInfo).catch(error => {
+        console.error('Login alert email failed (non-critical):', error.message);
+      });
 
       // Generate token with user object (includes role)
       const token = generateToken(user, user.role);

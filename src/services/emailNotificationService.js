@@ -34,7 +34,8 @@ class EmailNotificationService {
       logger.info(`Login alert sent to ${user.email}`);
     } catch (error) {
       logger.error('Failed to send login alert:', error);
-      throw error;
+      // Don't throw error - login should succeed even if email fails
+      return false;
     }
   }
 }
