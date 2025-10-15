@@ -6,114 +6,105 @@ import { notificationService } from './notificationService.js';
 import { ValidationError } from '../utils/errors.js';
 import { TRANSACTION_TYPE, TRANSACTION_STATUS } from '../constants/status.js';
 import { generateReference } from '../utils/transactionUtils.js';
-
+import { isValidAccountNumber } from '../utils/accountUtils.js';
 
 class AdminTransferService {
-  async processAdminTransfer(userId, amount, description) {
+  async transferByAccountNumber(accountNumber, amount, description, senderName, idempotencyKey) {
+    // Basic validations
+    if (!isValidAccountNumber(accountNumber)) {
+      throw new ValidationError('Invalid account number format');
+    }
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      throw new ValidationError('Amount must be a positive number');
+    }
+    if (!senderName || typeof senderName !== 'string' || senderName.trim().length < 2) {
+      throw new ValidationError('Sender name is required');
+    }
+
     const session = await Account.startSession();
     session.startTransaction();
 
     try {
-      const { userAccount, user } = await this.validateAndGetUser(userId);
-      await this.updateBalance(userAccount, amount, session);
-      await this.createNotifications(user, amount, description, session);
-
-      await session.commitTransaction();
-      return userAccount;
-    } catch (error) {
-      await session.abortTransaction();
-      logger.error('Admin transfer failed:', error);
-      throw error;
-    } finally {
-      session.endSession();
-    }
-  }
-
-  async validateAndGetUser(userId) {
-    const [userAccount, user] = await Promise.all([
-      Account.findOne({ userId }),
-      User.findById(userId)
-    ]);
-
-    if (!userAccount || !user) {
-      throw new Error('User account not found');
-    }
-
-    return { userAccount, user };
-  }
-
-  async updateBalance(account, amount, session) {
-    account.balance += amount;
-    await account.save({ session });
-  }
-
-  async createNotifications(user, amount, description, session) {
-    await Promise.all([
-      notificationService.createUserNotification({
-        userId: user._id,
-        title: 'Admin Transfer Received',
-        message: `${amount} USD has been credited to your account. ${description || ''}`,
-        type: 'success'
-      }, session),
-      notificationService.createAdminNotification({
-        userId: user._id,
-        title: 'Admin Transfer Completed',
-        message: `Successfully transferred ${amount} USD to ${user.fullName}`,
-        type: 'info'
-      }, session)
-    ]);
-  }
-
-  async transferByAccountNumber(accountNumber, amount, description, senderName) {
-    const session = await Account.startSession();
-    session.startTransaction();
-
-    try {
-      const recipientAccount = await Account.findOne({ accountNumber });
+      const recipientAccount = await Account.findOne({ accountNumber }).session(session);
       if (!recipientAccount) {
         throw new ValidationError('Account not found');
       }
+      if (recipientAccount.status !== 'active') {
+        throw new ValidationError('Account is not active');
+      }
 
-      const recipientUser = await User.findById(recipientAccount.userId);
+      const recipientUser = await User.findById(recipientAccount.userId).session(session);
       if (!recipientUser) {
         throw new ValidationError('User not found');
       }
 
-      const transaction = await Transaction.create([{
-        userId: recipientUser._id,
-        type: TRANSACTION_TYPE.DEPOSIT,
-        amount,
-        status: TRANSACTION_STATUS.COMPLETED,
-        reference: generateReference(),
-        description: description || `Transfer from ${senderName}`,
-        balanceAfter: recipientAccount.balance + amount,
-        metadata: {
-          transferType: 'admin_transfer',
-          initiatedBy: 'admin',
-          senderName: senderName
+      // Idempotency: return existing transaction if the same idempotencyKey was used
+      if (idempotencyKey) {
+        const existing = await Transaction.findOne({
+          userId: recipientUser._id,
+          'metadata.transferType': 'admin_transfer',
+          'metadata.idempotencyKey': idempotencyKey
+        }).session(session);
+        if (existing) {
+          // No changes; assume previous run succeeded
+          await session.commitTransaction();
+          return {
+            recipientName: recipientUser.fullName,
+            senderName,
+            accountNumber,
+            amount: existing.amount,
+            newBalance: recipientAccount.balance,
+            transactionId: existing._id
+          };
         }
-      }], { session });
+      }
 
+      // Create transaction record first
+      const [transaction] = await Transaction.create([
+        {
+          userId: recipientUser._id,
+          type: TRANSACTION_TYPE.DEPOSIT,
+          amount,
+          status: TRANSACTION_STATUS.COMPLETED,
+          reference: generateReference(),
+          description: description || `Transfer from ${senderName}`,
+          balanceAfter: recipientAccount.balance + amount,
+          metadata: {
+            transferType: 'admin_transfer',
+            initiatedBy: 'admin',
+            senderName,
+            accountNumber,
+            ...(idempotencyKey ? { idempotencyKey } : {})
+          }
+        }
+      ], { session });
+
+      // Update balance
       recipientAccount.balance += amount;
       await recipientAccount.save({ session });
 
-      await Promise.all([
-        notificationService.createNotification({
-          userId: recipientUser._id,
-          title: 'Transfer Received',
-          message: `${amount} USD has been credited to your account from ${senderName}. ${description || ''}`,
-          type: 'success'
-        }, session),
-        
-        notificationService.sendTransactionAlert(recipientUser, {
-          amount,
-          type: 'Credit',
-          balance: recipientAccount.balance,
-          senderName
-        })
-      ]);
-
+      // Commit funds changes first to ensure atomicity
       await session.commitTransaction();
+
+      // Post-commit side effects (do not block the main result)
+      try {
+        await Promise.all([
+          notificationService.createNotification({
+            userId: recipientUser._id,
+            title: 'Transfer Received',
+            message: `${amount} USD has been credited to your account from ${senderName}. ${description || ''}`,
+            type: 'success'
+          }),
+          notificationService.sendTransactionAlert(recipientUser, {
+            amount,
+            type: 'Credit',
+            balance: recipientAccount.balance,
+            senderName
+          })
+        ]);
+      } catch (notifyErr) {
+        logger.error('Post-commit notification error:', notifyErr);
+      }
 
       return {
         recipientName: recipientUser.fullName,
@@ -121,7 +112,7 @@ class AdminTransferService {
         accountNumber,
         amount,
         newBalance: recipientAccount.balance,
-        transactionId: transaction[0]._id
+        transactionId: transaction._id
       };
     } catch (error) {
       await session.abortTransaction();

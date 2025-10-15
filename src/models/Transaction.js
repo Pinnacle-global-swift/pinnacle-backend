@@ -46,6 +46,7 @@ const transactionSchema = new mongoose.Schema({
     withdrawalMethod: String,
     accountNumber: String,
     swiftCode: String,
+    idempotencyKey: String,
     transferType: {
       type: String,
       enum: ['admin_transfer', 'user_transfer', 'system'],

@@ -51,7 +51,7 @@ export const adminController = {
 
   adminTransferByAccount: async (req, res, next) => {
     try {
-      const { accountNumber, amount, description, senderName } = req.body;
+      const { accountNumber, amount, description, senderName, idempotencyKey } = req.body;
 
       if (!accountNumber || !amount || !senderName) {
         return res.status(400).json({
@@ -71,7 +71,8 @@ export const adminController = {
         accountNumber,
         amount,
         description,
-        senderName
+        senderName,
+        idempotencyKey
       );
 
       res.status(200).json({
