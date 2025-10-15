@@ -31,6 +31,7 @@ export const adminUserController = {
             status: 1,
             kycStatus: { $arrayElemAt: ['$kyc.status', 0] },
             accountStatus: { $arrayElemAt: ['$account.status', 0] },
+            accountBalance: { $arrayElemAt: ['$account.balance', 0] },
             createdAt: 1
           }
         }

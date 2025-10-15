@@ -38,6 +38,8 @@ const router = express.Router();
  *                         type: string
  *                       accountStatus:
  *                         type: string
+ *                       accountBalance:
+ *                         type: number
  */
 router.get(
   '/',
