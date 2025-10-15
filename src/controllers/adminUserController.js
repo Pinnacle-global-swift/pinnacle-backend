@@ -7,10 +7,14 @@ import { logger } from '../utils/logger.js';
 export const adminUserController = {
   async getUsersList(req, res, next) {
     try {
+      // Use actual collection names from Mongoose to avoid mismatches
+      const kycCollection = KYC.collection.name; // e.g. 'pinnaclekycs'
+      const accountCollection = Account.collection.name; // e.g. 'pinnacleaccounts'
+
       const users = await User.aggregate([
         {
           $lookup: {
-            from: 'kycs',
+            from: kycCollection,
             localField: '_id',
             foreignField: 'userId',
             as: 'kyc'
@@ -18,7 +22,7 @@ export const adminUserController = {
         },
         {
           $lookup: {
-            from: 'accounts',
+            from: accountCollection,
             localField: '_id',
             foreignField: 'userId',
             as: 'account'
@@ -28,11 +32,11 @@ export const adminUserController = {
           $project: {
             fullName: 1,
             email: 1,
-            status: 1,
+            createdAt: 1,
+            // If your User model has no 'status', omit to avoid undefined values
             kycStatus: { $arrayElemAt: ['$kyc.status', 0] },
             accountStatus: { $arrayElemAt: ['$account.status', 0] },
-            accountBalance: { $arrayElemAt: ['$account.balance', 0] },
-            createdAt: 1
+            accountBalance: { $ifNull: [{ $arrayElemAt: ['$account.balance', 0] }, 0] }
           }
         }
       ]);
