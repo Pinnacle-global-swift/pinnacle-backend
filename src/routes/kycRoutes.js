@@ -34,17 +34,17 @@ const kycValidation = [
   body('fullLegalName').trim().notEmpty().withMessage('Full legal name is required'),
   body('dateOfBirth').isISO8601().withMessage('Valid date of birth is required'),
   body('nationality').trim().notEmpty().withMessage('Nationality is required'),
-  body('idType').isIn(['passport', 'national_id', 'drivers_license']).withMessage('Valid ID type is required'),
+  body('idType').isIn(['passport', 'national_id', 'driving_license']).withMessage('Valid ID type is required'),
   body('idNumber').trim().notEmpty().withMessage('ID number is required'),
   body('residentialAddress').trim().notEmpty().withMessage('Residential address is required')
 ];
 
 router.post(
-  '/submit', 
-  authenticate, 
+  '/submit',
+  authenticate,
   uploadFields,
-  kycValidation, 
-  validate, 
+  kycValidation,
+  validate,
   kycController.submitKYC
 );
 

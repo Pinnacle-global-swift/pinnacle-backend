@@ -16,7 +16,7 @@ const kycSchema = new mongoose.Schema({
   },
   idType: {
     type: String,
-    enum: ['passport', 'national_id', 'drivers_license'],
+    enum: ['passport', 'national_id', 'driving_license'],
     required: true
   },
   idNumber: {
