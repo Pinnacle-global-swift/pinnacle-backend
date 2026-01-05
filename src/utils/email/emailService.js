@@ -1,55 +1,45 @@
-import nodemailer from 'nodemailer';
+import { MailtrapClient } from 'mailtrap';
 import { config } from '../../config/config.js';
 import { logger } from '../logger.js';
 
-const transporter = nodemailer.createTransport({
-  host: config.emailHost,
-  port: config.emailPort,
-  secure: false, // Important: set to false for port 587
-  auth: {
-    user: config.emailUser,
-    pass: config.emailPassword
-  },
-  tls: {
-    // Required for some hosts
-    rejectUnauthorized: false,
-    ciphers: 'SSLv3'
-  },
-  connectionTimeout: 10000, // 10 seconds timeout
-  greetingTimeout: 5000,    // 5 seconds greeting timeout
-  socketTimeout: 10000,     // 10 seconds socket timeout
-  debug: process.env.NODE_ENV !== 'production' // Only debug in development
-});
+const client = config.mailtrapToken ? new MailtrapClient({
+  token: config.mailtrapToken,
+}) : null;
 
-// Test connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    logger.error('SMTP connection error:', error);
-  } else {
-    logger.info('SMTP server is ready to take messages');
-  }
-});
+const sender = {
+  email: config.mailtrapSenderEmail,
+  name: config.mailtrapSenderName || 'Pinnacle Global Swift',
+};
 
 export const emailService = {
   async sendEmail(to, template) {
+    if (!client) {
+      logger.error('Mailtrap client not initialized: MAILTRAP_TOKEN is missing');
+      return { success: false, error: 'Email service misconfigured' };
+    }
+
+    if (!to || !template || !template.subject || !template.html) {
+      logger.error('Invalid email parameters:', { to, template });
+      throw new Error('Missing required email parameters');
+    }
+
     try {
-      const mailOptions = {
-        from: config.emailFrom,
-        to,
+      const recipients = [{ email: to }];
+
+      logger.info(`Attempting to send email to: ${to} | Subject: ${template.subject}`);
+
+      const response = await client.send({
+        from: sender,
+        to: recipients,
         subject: template.subject,
         html: template.html,
-        headers: {
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High',
-          'Importance': 'high'
-        }
-      };
+        category: template.category || "Notification",
+      });
 
-      const info = await transporter.sendMail(mailOptions);
-      logger.info('Email sent successfully:', info.messageId);
-      return info;
+      logger.info(`Email sent successfully via Mailtrap to ${to}. ID: ${response.message_ids[0]}`);
+      return { success: true, ...response };
     } catch (error) {
-      logger.error('Failed to send email:', error);
+      logger.error(`Failed to send email to ${to} via Mailtrap:`, error);
       throw error;
     }
   }

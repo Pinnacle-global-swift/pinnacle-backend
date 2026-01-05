@@ -27,7 +27,6 @@ import { transferRoutes } from './routes/transferRoutes.js';
 // import { adminUserRoutes } from './routes/adminUserRoutes.js';
 import { databaseErrorHandler } from './middleware/databaseErrorHandler.js';
 
-
 const app = express();
 
 // Middleware
@@ -71,8 +70,8 @@ app.get('/health', (req, res) => {
 // Swagger Documentation
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// // Public routes
-// app.use('/api/public', publicRoutes);
+// Public routes
+app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 
 // // Protected routes

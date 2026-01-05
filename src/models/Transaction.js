@@ -49,16 +49,14 @@ const transactionSchema = new mongoose.Schema({
     idempotencyKey: String,
     transferType: {
       type: String,
-      enum: ['admin_transfer', 'user_transfer', 'system'],
-      required: true
+      enum: ['admin_transfer', 'user_transfer', 'system']
     },
     initiatedBy: {
-      type: String,
-      required: true
+      type: String
     },
     senderName: {
       type: String,
-      required: function() {
+      required: function () {
         return this.metadata.transferType === 'admin_transfer';
       }
     },

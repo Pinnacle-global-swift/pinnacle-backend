@@ -4,7 +4,7 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PinnacleUser',
-    required: true
+    required: false
   },
   title: {
     type: String,

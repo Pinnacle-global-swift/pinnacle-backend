@@ -14,7 +14,12 @@ export const config = {
     apiSecret: process.env.CLOUDINARY_API_SECRET
   },
 
-  // Email configuration for Zoho
+  // Mailtrap configuration
+  mailtrapToken: process.env.MAILTRAP_TOKEN,
+  mailtrapSenderEmail: process.env.MAILTRAP_SENDER_EMAIL,
+  mailtrapSenderName: process.env.MAILTRAP_SENDER_NAME,
+
+  // Old Email configuration (Keep for now to avoid breaking other imports until refactored)
   emailHost: process.env.EMAIL_HOST,
   emailPort: parseInt(process.env.EMAIL_PORT),
   emailUser: process.env.EMAIL_USER,

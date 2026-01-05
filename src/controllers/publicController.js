@@ -1,8 +1,8 @@
 import { CardApplication } from '../models/CardApplication.js';
 import { SupportTicket } from '../models/SupportTicket.js';
 import { Notification } from '../models/Notification.js';
-import { emailService } from '../utils/emailService.js';
-import {EmailTemplates } from "../utils/email/emailTemplates.js"
+import { emailService } from '../utils/email/emailService.js';
+import { EmailTemplates } from "../utils/email/emailTemplates.js"
 
 
 export const publicController = {
@@ -28,8 +28,7 @@ export const publicController = {
       // Send confirmation email
       await emailService.sendEmail(
         email,
-        'Card Application Received',
-        `Dear ${name},\n\nYour card application has been received and is being processed. We will contact you shortly.\n\nBest regards,\nFINEbank.IO Team`
+        EmailTemplates.cardApplicationReceived(name)
       );
 
       res.status(201).json({
@@ -68,8 +67,7 @@ export const publicController = {
       // Send confirmation email
       await emailService.sendEmail(
         email,
-        'Support Ticket Received',
-        `Dear ${name},\n\nYour support ticket has been received. Our team will get back to you shortly.\n\nTicket ID: ${ticket._id}\n\nBest regards,\nFINEbank.IO Support Team`
+        EmailTemplates.supportTicketReceived(name, ticket._id)
       );
 
       res.status(201).json({

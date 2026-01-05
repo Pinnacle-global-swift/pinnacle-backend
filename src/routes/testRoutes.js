@@ -6,11 +6,14 @@ const router = express.Router();
 
 router.post('/test-email', async (req, res) => {
     try {
-        const result = await emailService.sendTestEmail();
+        const result = await emailService.sendEmail('pinnacleglobalswift@gmail.com', {
+            subject: 'Pinnacle Test Email',
+            html: '<h1>Test Email</h1><p>This is a test email from Pinnacle Global Swift.</p>'
+        });
         res.json({
             success: true,
             message: 'Test email sent successfully',
-            messageId: result.id
+            messageId: result.message_ids[0]
         });
     } catch (error) {
         logger.error('Test email failed:', error);
