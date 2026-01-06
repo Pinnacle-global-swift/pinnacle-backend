@@ -3,9 +3,11 @@ import { Account } from '../models/Account.js';
 import { Card } from '../models/Card.js';
 import { Notification } from '../models/Notification.js';
 import { transferService } from '../services/transferService.js';
-import {adminTransferService } from '../services/adminTransferService.js'
+import { adminTransferService } from '../services/adminTransferService.js'
 import { Transaction } from '../models/Transaction.js';
 import { KYC } from '../models/KYC.js';
+import { emailService } from '../utils/email/emailService.js';
+import { EmailTemplates } from '../utils/email/emailTemplates.js';
 
 export const adminController = {
 
@@ -236,6 +238,37 @@ export const adminController = {
       res.status(200).json({
         success: true,
         message: 'Notifications marked as read'
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  sendEmailToUser: async (req, res, next) => {
+    try {
+      const { userId, subject, title, message } = req.body;
+
+      if (!userId || !message) {
+        return res.status(400).json({
+          success: false,
+          error: 'User ID and message are required'
+        });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      const template = EmailTemplates.adminCustomMessage(title || subject, message);
+      await emailService.sendEmail(user.email, template);
+
+      res.status(200).json({
+        success: true,
+        message: `Email sent successfully to ${user.fullName} (${user.email})`
       });
     } catch (error) {
       next(error);

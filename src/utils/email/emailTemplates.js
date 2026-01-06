@@ -140,7 +140,7 @@ export const EmailTemplates = {
             <p>Your support request has been successfully logged. Our dedicated relationship managers are reviewing your inquiry and will provide a detailed response shortly.</p>
             
             <div class="info-card">
-                <p style="margin: 0;"><strong>Ticket ID:</strong> <span style="font-family: monospace;">#${ticketId}</span></p>
+                <p style="margin: 0; font-weight: 600;">Ticket ID: #${ticketId}</p>
             </div>
             
             <p>For urgent matters, please use the private concierge feature within your mobile app.</p>
@@ -148,6 +148,27 @@ export const EmailTemplates = {
         return {
             subject: `Pinnacle Global Swift Support - Ticket #${ticketId}`,
             html: renderBaseTemplate(title, content, "We've received your inquiry and are working on it.")
+        };
+    },
+
+    adminCustomMessage: (title, message) => {
+        const emailTitle = title || 'Official Communication';
+        const content = `
+            <h1 style="color: #1e3a8a; margin-bottom: 20px;">${emailTitle}</h1>
+            <p>Dear Valued Customer,</p>
+            <div style="line-height: 1.6; color: #334155; margin-bottom: 30px;">
+                ${message}
+            </div>
+            
+            <div class="info-card" style="border-left: 4px solid #1e3a8a;">
+                <p style="margin: 0; font-size: 14px; color: #64748b;">
+                    This is an official communication from your Pinnacle Global Swift relationship management team.
+                </p>
+            </div>
+        `;
+        return {
+            subject: `Pinnacle Global Swift - ${emailTitle}`,
+            html: renderBaseTemplate(emailTitle, content, "Official communication regarding your account.")
         };
     }
 };

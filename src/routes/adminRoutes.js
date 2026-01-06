@@ -198,4 +198,17 @@ router.post(
 // Admin User Routes
 router.use('/users', adminUserRoutes);
 
+// Admin Email Route
+router.post(
+  '/email/send',
+  [
+    body('userId').isMongoId().withMessage('Valid user ID is required'),
+    body('subject').trim().notEmpty().withMessage('Subject is required'),
+    body('message').trim().notEmpty().withMessage('Message is required'),
+    body('title').optional().trim()
+  ],
+  validate,
+  adminController.sendEmailToUser
+);
+
 export const adminRoutes = router;
