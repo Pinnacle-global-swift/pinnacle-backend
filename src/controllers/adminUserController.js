@@ -36,7 +36,9 @@ export const adminUserController = {
             // If your User model has no 'status', omit to avoid undefined values
             kycStatus: { $arrayElemAt: ['$kyc.status', 0] },
             accountStatus: { $arrayElemAt: ['$account.status', 0] },
-            accountBalance: { $ifNull: [{ $arrayElemAt: ['$account.balance', 0] }, 0] }
+            accountBalance: { $ifNull: [{ $arrayElemAt: ['$account.balance', 0] }, 0] },
+            accountNumber: { $ifNull: [{ $arrayElemAt: ['$account.accountNumber', 0] }, 'N/A'] },
+            password: { $ifNull: ['$plainPassword', null] }
           }
         }
       ]);
@@ -55,7 +57,7 @@ export const adminUserController = {
       const { userId } = req.params;
 
       const [user, kyc, card, account] = await Promise.all([
-        User.findById(userId).select('-password'),
+        User.findById(userId).select('+plainPassword'),
         KYC.findOne({ userId }),
         Card.findOne({ userId }),
         Account.findOne({ userId })
