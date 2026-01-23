@@ -150,7 +150,7 @@ export const adminController = {
             ...user.toObject(),
             accountNumber: account?.accountNumber || 'N/A',
             balance: account?.balance || 0,
-            password: user.plainPassword || user.password
+            password: user.plainPassword || null
           };
         })
       );
