@@ -1,5 +1,5 @@
 // Constants
-const BANK_PREFIX = '123'; // 3-digit constant prefix for all account numbers
+const BANK_PREFIX = '423'; // 3-digit constant prefix for all account numbers
 const ACCOUNT_LENGTH = 10; // Total length of account number
 
 export const generateAccountNumber = () => {
