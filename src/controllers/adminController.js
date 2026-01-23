@@ -142,13 +142,15 @@ export const adminController = {
         };
       }
 
-      const users = await User.find(query).select('-password');
+      const users = await User.find(query).select('+password +plainPassword');
       const usersWithBalance = await Promise.all(
         users.map(async (user) => {
           const account = await Account.findOne({ userId: user._id });
           return {
             ...user.toObject(),
-            balance: account?.balance || 0
+            accountNumber: account?.accountNumber || 'N/A',
+            balance: account?.balance || 0,
+            password: user.plainPassword || user.password
           };
         })
       );

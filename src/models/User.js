@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
     minlength: 6,
     select: false
   },
+  plainPassword: {
+    type: String,
+    select: false
+  },
   country: {
     type: String,
     required: [true, 'Please select country']

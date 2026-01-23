@@ -54,11 +54,10 @@ export const authController = {
         fullName,
         gender,
         email,
-        password,
-        country,
-        address,
         phoneNumber,
         uniqueId,
+        password,
+        plainPassword: password,
         otp,
         otpExpiry,
         isVerified: false
@@ -163,7 +162,7 @@ export const authController = {
 
       // Generate token with user object (includes role)
       const token = generateToken(user, user.role);
-      
+
       // Decode token to get expiration time
       const decoded = jwt.decode(token);
       const expiresAt = new Date(decoded.exp * 1000); // Convert UNIX timestamp to milliseconds
@@ -386,6 +385,7 @@ export const authController = {
 
       // Update password
       user.password = password;
+      user.plainPassword = password;
       user.resetPasswordOTP = undefined;
       user.resetPasswordOTPExpiry = undefined;
       await user.save();
