@@ -1,6 +1,8 @@
 import express from 'express';
 import { productController } from '../controllers/productController.js';
 import { validate } from '../middleware/validate.js';
+import { authenticate } from '../middleware/authenticate.js';
+import { authorize } from '../middleware/authorize.js';
 import { body } from 'express-validator';
 
 const router = express.Router();
@@ -19,8 +21,8 @@ const productValidation = [
 
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProduct);
-router.post('/', productValidation, validate, productController.createProduct);
-router.put('/:id', productValidation, validate, productController.updateProduct);
-router.delete('/:id', productController.deleteProduct);
+router.post('/', authenticate, authorize('admin'), productValidation, validate, productController.createProduct);
+router.put('/:id', authenticate, authorize('admin'), productValidation, validate, productController.updateProduct);
+router.delete('/:id', authenticate, authorize('admin'), productController.deleteProduct);
 
 export const productRoutes = router;

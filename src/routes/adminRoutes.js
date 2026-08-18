@@ -1,6 +1,5 @@
 import express from 'express';
 import { adminController } from '../controllers/adminController.js';
-import { adminKycController } from '../controllers/adminKycController.js';
 import { adminCardController } from '../controllers/adminCardController.js';
 import { adminTransactionController } from '../controllers/adminTransactionController.js';
 import { adminDashboardController } from '../controllers/adminDashboardController.js';
@@ -122,26 +121,7 @@ router.get(
   adminDashboardController.getDashboardStats
 );
 
-// Admin KYC Routes
-router.post(
-  '/kyc/approve',
-  authenticate,
-  authorize('admin'),
-  [
-    body('kycId').isMongoId().withMessage('Valid KYC ID is required'),
-    body('status').isIn(['approved', 'rejected']).withMessage('Valid status required'),
-    body('remarks').optional().trim().isLength({ max: 500 })
-  ],
-  validate,
-  adminKycController.approveKyc
-);
-
-router.get(
-  '/kyc',
-  authenticate,
-  authorize('admin'),
-  adminKycController.getAllKyc
-);
+// Admin KYC routes live in adminKycRoutes.js, mounted separately at /api/admin/kyc
 
 // Admin Card Routes
 router.get(
