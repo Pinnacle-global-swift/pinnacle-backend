@@ -54,6 +54,8 @@ export const authController = {
         fullName,
         gender,
         email,
+        country,
+        address,
         phoneNumber,
         uniqueId,
         password,
