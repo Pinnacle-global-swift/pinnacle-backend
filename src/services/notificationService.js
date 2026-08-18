@@ -14,7 +14,7 @@ class NotificationService {
     }
   }
 
-  async sendTransactionAlert(user, { amount, type, balance }) {
+  async sendTransactionAlert(user, { amount, type, balance, senderName }) {
     try {
       // Create in-app notification
       await this.createNotification({
@@ -29,7 +29,8 @@ class NotificationService {
         user.fullName,
         amount,
         type,
-        balance
+        balance,
+        senderName ? `from ${senderName}` : undefined
       );
 
       await emailService.sendEmail(user.email, emailTemplate);

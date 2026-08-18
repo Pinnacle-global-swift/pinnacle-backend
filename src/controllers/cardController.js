@@ -64,7 +64,7 @@ export const cardController = {
       }
 
       // Send email notification
-      const emailTemplate = EmailTemplates.cardApplicationStatus('pending', type);
+      const emailTemplate = EmailTemplates.cardApplicationReceived(user.fullName);
       await emailService.sendEmail(user.email, emailTemplate);
 
       res.status(201).json({
@@ -93,10 +93,8 @@ export const cardController = {
       );
 
       // Send email notification
-      await emailService.sendEmail(req.user.email, {
-        subject: 'Card Payment Processed',
-        html: `Your card payment has been processed successfully. Your card is now active.`
-      });
+      const paymentUser = await User.findById(req.user.id).select('fullName');
+      await emailService.sendEmail(req.user.email, EmailTemplates.cardActivated(paymentUser?.fullName || 'Valued Customer'));
 
       res.status(200).json({
         success: true,

@@ -49,7 +49,20 @@ export const renderBaseTemplate = (title, content, preheader = '') => {
                 <td align="center" style="padding: 20px 0;">
                     <div class="container">
                         <div class="header">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/first-project-a5bbf.appspot.com/o/pgbw.png?alt=media&token=bbf2f313-a323-467f-a87e-d555f4337e15?text=Pinnacle+Global+Swift" alt="Pinnacle Global Swift" class="logo">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto;">
+                                <tr>
+                                    <td style="vertical-align: middle; padding-right: 12px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="36" height="36" style="width: 36px; height: 36px; border: 1.5px solid rgba(255,255,255,0.85); border-radius: 8px;">
+                                            <tr>
+                                                <td align="center" valign="middle" style="font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; color: #ffffff;">P</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 21px; font-weight: 700; color: #ffffff; letter-spacing: 0.3px;">PINNACLE</span><span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 21px; font-weight: 300; color: #ffffff; letter-spacing: 0.3px;"> GLOBAL SWIFT</span>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                         <div class="content">
                             ${content}

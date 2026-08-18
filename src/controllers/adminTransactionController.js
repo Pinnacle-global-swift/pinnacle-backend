@@ -38,7 +38,7 @@ export const adminTransactionController = {
       const { transactionId, status, remarks } = req.body;
 
       const transaction = await Transaction.findById(transactionId)
-        .populate('userId', 'email');
+        .populate('userId', 'email fullName');
 
       if (!transaction) {
         return res.status(404).json({
@@ -55,9 +55,11 @@ export const adminTransactionController = {
 
       // Send email notification
       if (transaction.userId?.email) {
-        const emailTemplate = EmailTemplates.transactionStatus(
+        const emailTemplate = EmailTemplates.transactionStatusUpdate(
+          transaction.userId.fullName,
           status,
           transaction.amount,
+          transaction.type,
           remarks
         );
         await emailService.sendEmail(transaction.userId.email, emailTemplate);

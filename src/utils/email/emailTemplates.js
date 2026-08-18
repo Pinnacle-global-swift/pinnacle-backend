@@ -22,6 +22,57 @@ export const EmailTemplates = {
         };
     },
 
+    kycSubmissionReceived: (name) => {
+        const title = 'Verification Documents Received';
+        const content = `
+            <h1 style="color: #1e3a8a; margin-bottom: 20px;">Documents Received</h1>
+            <p>Dear ${name},</p>
+            <p>Thank you for submitting your identity verification documents. Our compliance team has received them and will begin reviewing your application shortly.</p>
+
+            <div class="info-card">
+                <p style="margin: 0; font-weight: 600;">Status: Under Review</p>
+                <p style="margin: 5px 0 0; font-size: 14px; color: #64748b;">Estimated review time: 1-2 business days.</p>
+            </div>
+
+            <p>We will notify you by email as soon as a decision has been made. No further action is needed from you at this time.</p>
+
+            <a href="#" class="button">View Verification Status</a>
+        `;
+        return {
+            subject: 'Pinnacle Global Swift - Verification Documents Received',
+            html: renderBaseTemplate(title, content, "We've received your identity verification documents.")
+        };
+    },
+
+    kycStatusUpdate: (name, status, remarks) => {
+        const isApproved = status === 'approved';
+        const title = `Identity Verification ${isApproved ? 'Approved' : 'Update'}`;
+        const content = `
+            <h1 style="color: #1e3a8a; margin-bottom: 20px;">Verification ${isApproved ? 'Approved' : 'Update'}</h1>
+            <p>Dear ${name},</p>
+            <p>${isApproved
+                ? 'Great news — your identity verification has been approved. You now have full access to all Pinnacle Global Swift banking features.'
+                : "After a careful review by our compliance team, we regret to inform you that your verification could not be approved at this time."}</p>
+
+            <div class="info-card" style="border-left: 4px solid ${isApproved ? '#10b981' : '#ef4444'}; ${!isApproved ? 'background-color: #fef2f2;' : ''}">
+                <p style="margin: 0; font-size: 18px; color: ${isApproved ? '#065f46' : '#991b1b'};">
+                    Status: <strong>${status.toUpperCase()}</strong>
+                </p>
+                ${remarks ? `<p style="margin: 10px 0 0; color: #64748b;"><strong>Remarks:</strong> ${remarks}</p>` : ''}
+            </div>
+
+            ${isApproved
+                ? `<p>Thank you for helping us keep your account secure.</p>`
+                : `<p>You can re-submit your documents through the dashboard. Please ensure that all information matches your official documents and that images are clear and well-lit.</p>`}
+
+            <a href="#" class="button" ${isApproved ? '' : 'style="background-color: #ef4444;"'}>${isApproved ? 'Go to Dashboard' : 'Review and Resubmit'}</a>
+        `;
+        return {
+            subject: `Pinnacle Global Swift - Identity Verification ${isApproved ? 'Approved' : 'Update'}`,
+            html: renderBaseTemplate(title, content, `Your identity verification has been ${status}.`)
+        };
+    },
+
     kycRejection: (name, reason, remarks) => {
         const title = 'Identity Verification Update';
         const content = `
@@ -91,6 +142,52 @@ export const EmailTemplates = {
         return {
             subject: `Pinnacle Global Swift - Card Application ${status}`,
             html: renderBaseTemplate(title, content, `Your card application has been ${status}.`)
+        };
+    },
+
+    cardActivated: (name) => {
+        const title = 'Card Activated';
+        const content = `
+            <h1 style="color: #1e3a8a; margin-bottom: 20px;">Your Card Is Active</h1>
+            <p>Dear ${name},</p>
+            <p>Your payment has been confirmed and your Pinnacle Global Swift card is now active and ready to use.</p>
+
+            <div class="info-card">
+                <p style="margin: 0; font-weight: 600; color: #065f46;">Status: Active</p>
+            </div>
+
+            <p>Set a PIN from your dashboard if you haven't already, and you're all set to start spending.</p>
+
+            <a href="#" class="button">Manage Your Card</a>
+        `;
+        return {
+            subject: 'Pinnacle Global Swift - Card Activated',
+            html: renderBaseTemplate(title, content, 'Your card payment was confirmed and your card is now active.')
+        };
+    },
+
+    transactionStatusUpdate: (name, status, amount, type, remarks) => {
+        const isApproved = status === 'approved' || status === 'completed';
+        const title = `Transaction ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+        const content = `
+            <h1 style="color: #1e3a8a; margin-bottom: 20px;">Transaction Update</h1>
+            <p>Dear ${name},</p>
+            <p>There has been an update to your ${type ? `${type} ` : ''}transaction of <strong>$${Number(amount).toFixed(2)}</strong>.</p>
+
+            <div class="info-card" style="border-left: 4px solid ${isApproved ? '#10b981' : '#ef4444'};">
+                <p style="margin: 0; font-size: 18px; color: ${isApproved ? '#065f46' : '#991b1b'};">
+                    Status: <strong>${status.toUpperCase()}</strong>
+                </p>
+                ${remarks ? `<p style="margin: 10px 0 0; color: #64748b;"><strong>Remarks:</strong> ${remarks}</p>` : ''}
+            </div>
+
+            <p style="font-size: 14px; color: #64748b;">If you did not expect this update, please contact our support team immediately.</p>
+
+            <a href="#" class="button">View Transaction History</a>
+        `;
+        return {
+            subject: `Pinnacle Global Swift - Transaction ${status}`,
+            html: renderBaseTemplate(title, content, `Your transaction of $${Number(amount).toFixed(2)} was ${status}.`)
         };
     },
 

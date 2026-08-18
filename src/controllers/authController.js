@@ -217,7 +217,7 @@ export const authController = {
       // Send new OTP email
       await emailService.sendEmail(
         email,
-        authEmailTemplates.otpVerification(user.fullName, otp)
+        authEmailTemplates.otpVerification(user.fullName, user.accountType, user.uniqueId, otp)
       );
 
       res.status(200).json({
@@ -263,6 +263,11 @@ export const authController = {
       user.otp = undefined;
       user.otpExpiry = undefined;
       await user.save();
+
+      // Send welcome email (non-blocking - don't fail verification if email fails)
+      emailNotificationService.sendWelcomeEmail(user).catch(error => {
+        console.error('Welcome email failed (non-critical):', error.message);
+      });
 
       res.status(200).json({
         success: true,

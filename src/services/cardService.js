@@ -202,14 +202,25 @@ export const cardService = {
 
     // Use setTimeout to schedule the rejection
     setTimeout(async () => {
-      const updatedCard = await Card.findById(card._id);
-      if (updatedCard && updatedCard.status === CARD_STATUS.PENDING) {
-        updatedCard.status = CARD_STATUS.REJECTED;
-        await updatedCard.save();
+      try {
+        const updatedCard = await Card.findById(card._id).populate('userId', 'email fullName');
+        if (updatedCard && updatedCard.status === CARD_STATUS.PENDING) {
+          updatedCard.status = CARD_STATUS.REJECTED;
+          await updatedCard.save();
 
-        // Send email notification
-        await emailService.sendEmail(updatedCard.userId.email, 
-          EmailTemplates.cardApplicationStatus('rejected', updatedCard.type, 'Your application has been automatically rejected after 2 days.'));
+          // Send email notification
+          if (updatedCard.userId?.email) {
+            await emailService.sendEmail(updatedCard.userId.email,
+              EmailTemplates.cardApplicationStatus(
+                updatedCard.userId.fullName,
+                'rejected',
+                updatedCard.type,
+                'Your application has been automatically rejected after 2 days.'
+              ));
+          }
+        }
+      } catch (error) {
+        console.error('Scheduled card rejection failed:', error);
       }
     }, rejectionTime - new Date());
   },

@@ -76,7 +76,7 @@ export const kycController = {
       }
 
       // Send email notification using the template
-      const emailTemplate = EmailTemplates.verifyKyc();
+      const emailTemplate = EmailTemplates.kycSubmissionReceived(user.fullName);
       await emailService.sendEmail(
         user.email,
         emailTemplate

@@ -47,7 +47,7 @@ export const adminCardController = {
     try {
       const { cardId, status, remarks } = req.body;
 
-      const card = await Card.findById(cardId).populate('userId', 'email');
+      const card = await Card.findById(cardId).populate('userId', 'email fullName');
       if (!card) {
         return res.status(404).json({
           success: false,
@@ -72,6 +72,7 @@ export const adminCardController = {
       // Send email notification
       if (card.userId && card.userId.email) {
         const emailTemplate = EmailTemplates.cardApplicationStatus(
+          card.userId.fullName,
           status,
           card.type,
           remarks
